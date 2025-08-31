@@ -253,6 +253,267 @@ export const AI_MODELS: AIModel[] = [
         description: 'Optimized for code generation',
         contextWindow: '32k context window',
         version: 'Version: qrok-code-1'
+    },
+
+    // G4F Models - GPT4Free
+    // GPT-5 Models
+    {
+        id: 'gpt-5',
+        name: 'GPT-5 (Microsoft Copilot)',
+        provider: 'g4f',
+        description: 'Microsoft Copilot with GPT-5 via GPT4Free',
+        contextWindow: '128k context window',
+        version: 'Version: gpt-5'
+    },
+    {
+        id: 'gpt-5-mini',
+        name: 'GPT-5 Mini (Api.Airforce)',
+        provider: 'g4f',
+        description: 'Api.Airforce with GPT-5 Mini via GPT4Free',
+        contextWindow: '64k context window',
+        version: 'Version: gpt-5-mini'
+    },
+    {
+        id: 'gpt-5-nano',
+        name: 'GPT-5 Nano (Api.Airforce)',
+        provider: 'g4f',
+        description: 'Api.Airforce with GPT-5 Nano via GPT4Free',
+        contextWindow: '32k context window',
+        version: 'Version: gpt-5-nano'
+    },
+    {
+        id: 'gpt-5-nano-2025-08-07',
+        name: 'GPT-5 Nano 2025 (Pollinations AI)',
+        provider: 'g4f',
+        description: 'Pollinations AI with GPT-5 Nano via GPT4Free',
+        contextWindow: '32k context window',
+        version: 'Version: gpt-5-nano-2025-08-07'
+    },
+    {
+        id: 'gpt-5-chat',
+        name: 'GPT-5 Chat (Api.Airforce)',
+        provider: 'g4f',
+        description: 'Api.Airforce with GPT-5 Chat via GPT4Free',
+        contextWindow: '64k context window',
+        version: 'Version: gpt-5-chat'
+    },
+    {
+        id: 'gpt-4.1-2025-04-14',
+        name: 'GPT-4.1 2025 (Pollinations AI)',
+        provider: 'g4f',
+        description: 'Pollinations AI with GPT-4.1 via GPT4Free',
+        contextWindow: '128k context window',
+        version: 'Version: gpt-4.1-2025-04-14'
+    },
+    
+    // OpenAI Models
+    {
+        id: 'gpt-3.5-turbo',
+        name: 'GPT-3.5 Turbo (G4F)',
+        provider: 'g4f',
+        description: 'Fast and efficient model via GPT4Free',
+        contextWindow: '16k context window',
+        version: 'Version: gpt-3.5-turbo'
+    },
+    {
+        id: 'gpt-4',
+        name: 'GPT-4 (G4F)',
+        provider: 'g4f',
+        description: 'Powerful model via GPT4Free',
+        contextWindow: '8k context window',
+        version: 'Version: gpt-4'
+    },
+    {
+        id: 'gpt-4o',
+        name: 'GPT-4o (G4F)',
+        provider: 'g4f',
+        description: 'Latest GPT-4 model via GPT4Free',
+        contextWindow: '128k context window',
+        version: 'Version: gpt-4o'
+    },
+    {
+        id: 'openai/gpt-oss-120b',
+        name: 'GPT-OSS 120B (HuggingFace/DeepInfra)',
+        provider: 'g4f',
+        description: 'OpenAI GPT-OSS 120B via HuggingFace/DeepInfra',
+        contextWindow: '128k context window',
+        version: 'Version: openai/gpt-oss-120b'
+    },
+    
+    // Anthropic Models
+    {
+        id: 'claude-3-haiku',
+        name: 'Claude 3 Haiku (G4F)',
+        provider: 'g4f',
+        description: 'Fast Claude model via GPT4Free',
+        contextWindow: '200k context window',
+        version: 'Version: claude-3-haiku'
+    },
+    
+    // Google Models
+    {
+        id: 'gemini-2.5-pro',
+        name: 'Gemini 2.5 Pro (Api.Airforce)',
+        provider: 'g4f',
+        description: 'Api.Airforce with Gemini 2.5 Pro via GPT4Free',
+        contextWindow: '1M context window',
+        version: 'Version: gemini-2.5-pro'
+    },
+    {
+        id: 'gemini-2.5-flash',
+        name: 'Gemini 2.5 Flash (Api.Airforce)',
+        provider: 'g4f',
+        description: 'Api.Airforce with Gemini 2.5 Flash via GPT4Free',
+        contextWindow: '1M context window',
+        version: 'Version: gemini-2.5-flash'
+    },
+    {
+        id: 'gemini-2.5-flash-lite',
+        name: 'Gemini 2.5 Flash Lite (Pollinations AI)',
+        provider: 'g4f',
+        description: 'Pollinations AI with Gemini 2.5 Flash Lite via GPT4Free',
+        contextWindow: '1M context window',
+        version: 'Version: gemini-2.5-flash-lite'
+    },
+    
+    // Meta Models
+    {
+        id: 'llama-3-8b',
+        name: 'Llama 3 8B (G4F)',
+        provider: 'g4f',
+        description: 'Meta\'s Llama 3 8B model via GPT4Free',
+        contextWindow: '8k context window',
+        version: 'Version: llama-3-8b'
+    },
+    {
+        id: 'llama-3-70b',
+        name: 'Llama 3 70B (G4F)',
+        provider: 'g4f',
+        description: 'Meta\'s Llama 3 70B model via GPT4Free',
+        contextWindow: '8k context window',
+        version: 'Version: llama-3-70b'
+    },
+    
+    // Mistral Models
+    {
+        id: 'mistral-7b',
+        name: 'Mistral 7B (G4F)',
+        provider: 'g4f',
+        description: 'Mistral 7B model via GPT4Free',
+        contextWindow: '8k context window',
+        version: 'Version: mistral-7b'
+    },
+    {
+        id: 'mixtral-8x7b',
+        name: 'Mixtral 8x7B (G4F)',
+        provider: 'g4f',
+        description: 'Mixtral 8x7B model via GPT4Free',
+        contextWindow: '32k context window',
+        version: 'Version: mixtral-8x7b'
+    },
+    
+    // DeepSeek Models
+    {
+        id: 'deepseek-ai/DeepSeek-V3',
+        name: 'DeepSeek V3 (HuggingFace)',
+        provider: 'g4f',
+        description: 'DeepSeek V3 via HuggingFace',
+        contextWindow: '64k context window',
+        version: 'Version: deepseek-ai/DeepSeek-V3'
+    },
+    {
+        id: 'deepseek-ai/DeepSeek-V3.1',
+        name: 'DeepSeek V3.1 (HuggingFace)',
+        provider: 'g4f',
+        description: 'DeepSeek V3.1 via HuggingFace',
+        contextWindow: '64k context window',
+        version: 'Version: deepseek-ai/DeepSeek-V3.1'
+    },
+    {
+        id: 'deepseek-ai/DeepSeek-R1',
+        name: 'DeepSeek R1 (HuggingFace)',
+        provider: 'g4f',
+        description: 'DeepSeek R1 via HuggingFace',
+        contextWindow: '32k context window',
+        version: 'Version: deepseek-ai/DeepSeek-R1'
+    },
+    {
+        id: 'deepseek-ai/DeepSeek-R1-0528',
+        name: 'DeepSeek R1 0528 (DeepInfra)',
+        provider: 'g4f',
+        description: 'DeepSeek R1 0528 via DeepInfra',
+        contextWindow: '32k context window',
+        version: 'Version: deepseek-ai/DeepSeek-R1-0528'
+    },
+    {
+        id: 'deepseek-ai/deepseek-r1-distill-qwen-32b',
+        name: 'DeepSeek R1 Distill Qwen 32B (Cloudflare AI)',
+        provider: 'g4f',
+        description: 'DeepSeek R1 Distill Qwen 32B via Cloudflare AI',
+        contextWindow: '32k context window',
+        version: 'Version: deepseek-ai/deepseek-r1-distill-qwen-32b'
+    },
+    
+    // Qwen Models
+    {
+        id: 'Qwen/Qwen3-Coder-30B-A3B-Instruct',
+        name: 'Qwen3 Coder 30B (HuggingFace)',
+        provider: 'g4f',
+        description: 'Qwen3 Coder 30B via HuggingFace',
+        contextWindow: '32k context window',
+        version: 'Version: Qwen/Qwen3-Coder-30B-A3B-Instruct'
+    },
+    {
+        id: 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
+        name: 'Qwen3 Coder 480B (HuggingFace)',
+        provider: 'g4f',
+        description: 'Qwen3 Coder 480B via HuggingFace',
+        contextWindow: '64k context window',
+        version: 'Version: Qwen/Qwen3-Coder-480B-A35B-Instruct'
+    },
+    {
+        id: 'Qwen/Qwen2.5-Coder-32B-Instruct',
+        name: 'Qwen2.5 Coder 32B (HuggingFace)',
+        provider: 'g4f',
+        description: 'Qwen2.5 Coder 32B via HuggingFace',
+        contextWindow: '32k context window',
+        version: 'Version: Qwen/Qwen2.5-Coder-32B-Instruct'
+    },
+    {
+        id: 'Qwen/Qwen3-235B-A22B-fp8-tput',
+        name: 'Qwen3 235B (HuggingFace Together)',
+        provider: 'g4f',
+        description: 'Qwen3 235B via HuggingFace Together',
+        contextWindow: '64k context window',
+        version: 'Version: Qwen/Qwen3-235B-A22B-fp8-tput'
+    },
+    
+    // NousResearch Models
+    {
+        id: 'NousResearch/Hermes-4-405B',
+        name: 'Hermes 4 405B (HuggingFace)',
+        provider: 'g4f',
+        description: 'NousResearch Hermes 4 405B via HuggingFace',
+        contextWindow: '64k context window',
+        version: 'Version: NousResearch/Hermes-4-405B'
+    },
+    
+    // Code Models
+    {
+        id: 'codellama-7b',
+        name: 'Code Llama 7B (G4F)',
+        provider: 'g4f',
+        description: 'Code-optimized Llama model via GPT4Free',
+        contextWindow: '16k context window',
+        version: 'Version: codellama-7b'
+    },
+    {
+        id: 'deepseek-coder',
+        name: 'DeepSeek Coder (G4F)',
+        provider: 'g4f',
+        description: 'Code generation model via GPT4Free',
+        contextWindow: '16k context window',
+        version: 'Version: deepseek-coder'
     }
 ];
 
@@ -287,6 +548,11 @@ export const AI_PROVIDERS: AIProvider[] = [
         id: 'local',
         name: 'Local Models',
         models: [] // Локальные модели будут загружаться динамически
+    },
+    {
+        id: 'g4f',
+        name: 'GPT4Free (G4F)',
+        models: AI_MODELS.filter(model => model.provider === 'g4f')
     }
 ];
 

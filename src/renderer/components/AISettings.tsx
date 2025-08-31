@@ -158,6 +158,16 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
         contextWindow: 4096
     });
 
+    const [g4fConfig, setG4fConfig] = useState({
+        serverUrl: 'http://localhost:1337',
+        model: 'gpt-3.5-turbo',
+        temperature: 0.7,
+        maxTokens: 2048,
+        topP: 0.95,
+        topK: 40,
+        timeout: 30000
+    });
+
     useEffect(() => {
         loadProviders();
         loadSavedConfigurations();
@@ -210,6 +220,12 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
         if (savedLocal) {
             setLocalConfig(JSON.parse(savedLocal));
         }
+
+        const savedG4F = localStorage.getItem('ai-config-g4f');
+        console.log('AISettings: savedG4F:', savedG4F ? 'exists' : 'not found');
+        if (savedG4F) {
+            setG4fConfig(JSON.parse(savedG4F));
+        }
     };
 
     const saveConfiguration = async () => {
@@ -236,6 +252,10 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
                 case 'local':
                     config = localConfig;
                     localStorage.setItem('ai-config-local', JSON.stringify(localConfig));
+                    break;
+                case 'g4f':
+                    config = g4fConfig;
+                    localStorage.setItem('ai-config-g4f', JSON.stringify(g4fConfig));
                     break;
             }
 
@@ -304,6 +324,9 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
                     break;
                 case 'local':
                     config = localConfig;
+                    break;
+                case 'g4f':
+                    config = g4fConfig;
                     break;
             }
 
@@ -585,6 +608,113 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
                                 min="512"
                                 max="32768"
                             />
+                        </div>
+                    </div>
+                );
+
+            case 'g4f':
+                return (
+                    <div>
+                        <div className="form-group">
+                            <label className="form-label">Server URL</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                value={g4fConfig.serverUrl}
+                                onChange={(e) => setG4fConfig(prev => ({ ...prev, serverUrl: e.target.value }))}
+                                placeholder="http://localhost:1337"
+                            />
+                            <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                URL вашего GPT4Free сервера
+                            </small>
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Model</label>
+                            <select
+                                className="form-select"
+                                value={g4fConfig.model}
+                                onChange={(e) => setG4fConfig(prev => ({ ...prev, model: e.target.value }))}
+                            >
+                                {getModelsByProvider('g4f').map(model => (
+                                    <option key={model.id} value={model.id}>{model.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Temperature: {g4fConfig.temperature}</label>
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.1"
+                                value={g4fConfig.temperature}
+                                onChange={(e) => setG4fConfig(prev => ({ ...prev, temperature: parseFloat(e.target.value) }))}
+                                style={{ width: '100%' }}
+                            />
+                            <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                Контролирует креативность ответов
+                            </small>
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Max Tokens</label>
+                            <input
+                                type="number"
+                                className="form-input"
+                                value={g4fConfig.maxTokens}
+                                onChange={(e) => setG4fConfig(prev => ({ ...prev, maxTokens: parseInt(e.target.value) }))}
+                                min="1"
+                                max="8192"
+                            />
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Top P: {g4fConfig.topP}</label>
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.05"
+                                value={g4fConfig.topP}
+                                onChange={(e) => setG4fConfig(prev => ({ ...prev, topP: parseFloat(e.target.value) }))}
+                                style={{ width: '100%' }}
+                            />
+                            <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                Контролирует разнообразие ответов
+                            </small>
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Top K</label>
+                            <input
+                                type="number"
+                                className="form-input"
+                                value={g4fConfig.topK}
+                                onChange={(e) => setG4fConfig(prev => ({ ...prev, topK: parseInt(e.target.value) }))}
+                                min="1"
+                                max="100"
+                            />
+                            <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                Количество рассматриваемых токенов (1-100)
+                            </small>
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Timeout (ms)</label>
+                            <input
+                                type="number"
+                                className="form-input"
+                                value={g4fConfig.timeout}
+                                onChange={(e) => setG4fConfig(prev => ({ ...prev, timeout: parseInt(e.target.value) }))}
+                                min="5000"
+                                max="120000"
+                                step="1000"
+                            />
+                            <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                Таймаут запроса в миллисекундах
+                            </small>
                         </div>
                     </div>
                 );

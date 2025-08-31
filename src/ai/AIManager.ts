@@ -2,6 +2,7 @@ import { OpenAIProvider } from './providers/OpenAIProvider';
 import { AnthropicProvider } from './providers/AnthropicProvider';
 import { GeminiAIProvider } from './providers/GeminiAIProvider';
 import { LocalModelProvider } from './providers/LocalModelProvider';
+import { G4FAIProvider } from './providers/G4FAIProvider';
 import { AIProvider, AIMessage, AIResponse } from './types/AITypes';
 
 export interface CodeContext {
@@ -62,6 +63,7 @@ export class AIManager {
         this.providers.set('anthropic', new AnthropicProvider());
         this.providers.set('google', new GeminiAIProvider());
         this.providers.set('local', new LocalModelProvider());
+        this.providers.set('g4f', new G4FAIProvider());
     }
 
     private loadSavedProvider(): void {
