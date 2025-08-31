@@ -39,7 +39,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
         openFolder: () => ipcRenderer.invoke('dialog:open-folder')
     },
 
-
+    // Terminal API
+    terminal: {
+        executeCommand: (command: string, workingDirectory: string) => 
+            ipcRenderer.invoke('terminal:execute-command', command, workingDirectory)
+    },
 
     // Event listeners
     on: (channel: string, callback: (...args: any[]) => void) => {
@@ -47,6 +51,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
             'save-file',
             'show-ai-chat',
             'show-ai-settings',
+            'toggle-terminal',
             'project:opened',
             'project:state-loaded',
             'file:opened'
@@ -86,6 +91,12 @@ declare global {
             dialog: {
                 openFile: () => Promise<string | null>;
                 openFolder: () => Promise<string | null>;
+            };
+            terminal: {
+                executeCommand: (command: string, workingDirectory: string) => Promise<{
+                    output: string;
+                    newDirectory: string;
+                }>;
             };
             on: (channel: string, callback: (...args: any[]) => void) => void;
             removeAllListeners: (channel: string) => void;

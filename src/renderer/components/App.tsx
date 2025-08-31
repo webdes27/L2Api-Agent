@@ -5,6 +5,7 @@ import AIChat from './AIChat';
 import StatusBar from './StatusBar';
 import AISettings from './AISettings';
 import ConfirmDialog from './ConfirmDialog';
+import Terminal from './Terminal';
 
 export interface FileNode {
     name: string;
@@ -23,6 +24,8 @@ const App: React.FC = () => {
     const [modifiedFiles, setModifiedFiles] = useState<Set<string>>(new Set());
     const [showAIChat, setShowAIChat] = useState(false);
     const [showAISettings, setShowAISettings] = useState(false);
+    const [showTerminal, setShowTerminal] = useState(false);
+    const [terminalHeight, setTerminalHeight] = useState(300);
     const [aiProvider, setAiProvider] = useState<string>('');
     const [projectFiles, setProjectFiles] = useState<FileNode[]>([]);
     
@@ -92,6 +95,11 @@ const App: React.FC = () => {
                 setShowAISettings(true);
             });
 
+            window.electronAPI.on('toggle-terminal', () => {
+                console.log('Toggle Terminal requested');
+                setShowTerminal(prev => !prev);
+            });
+
             window.electronAPI.on('save-file', () => {
                 if (activeFile) {
                     saveFile(activeFile);
@@ -107,6 +115,7 @@ const App: React.FC = () => {
                 // window.electronAPI.removeAllListeners('project:state-loaded');
                 window.electronAPI.removeAllListeners('show-ai-chat');
                 window.electronAPI.removeAllListeners('show-ai-settings');
+                window.electronAPI.removeAllListeners('toggle-terminal');
                 window.electronAPI.removeAllListeners('save-file');
             }
         };
@@ -419,6 +428,22 @@ const App: React.FC = () => {
         }
     };
 
+    const handleSendToAI = (command: string) => {
+        if (showAIChat) {
+            // Send command to AI chat
+            const message = `Execute this terminal command and explain what it does:\n\`\`\`bash\n${command}\n\`\`\``;
+            // You can implement this by exposing a method from AIChat component
+            // For now, we'll just show the AI chat if it's not visible
+            if (!showAIChat) {
+                setShowAIChat(true);
+            }
+        } else {
+            // Show AI chat and send the command
+            setShowAIChat(true);
+            // The command will be sent when AI chat is ready
+        }
+    };
+
     const saveProjectState = async () => {
         if (currentProject) {
             const state = {
@@ -573,90 +598,114 @@ const App: React.FC = () => {
                 />
 
                 {/* Центральная панель - Редактор */}
-                <div className="content-area">
+                <div className="content-area" style={{ position: 'relative' }}>
                     {openFiles.length === 0 ? (
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center', 
-                            height: '100%',
-                            color: 'var(--text-secondary)',
-                            fontSize: '16px'
-                        }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <h2>Добро пожаловать в L2Api Agent!</h2>
-                                <p>Откройте файл или папку для начала работы</p>
-                                <div style={{ marginTop: '20px' }}>
-                                    <button 
-                                        className="button primary"
-                                        onClick={async () => {
-                                            console.log('Opening file dialog...');
-                                            console.log('electronAPI available:', !!window.electronAPI);
-                                            console.log('dialog available:', !!window.electronAPI?.dialog);
-                                            
-                                            if (window.electronAPI && window.electronAPI.dialog) {
-                                                try {
-                                                    console.log('Calling dialog.openFile()...');
-                                                    const filePath = await window.electronAPI.dialog.openFile();
-                                                    console.log('Dialog returned:', filePath);
-                                                    if (filePath) {
-                                                        console.log('File opened from welcome screen:', filePath);
-                                                        await openFile(filePath);
-                                                    } else {
-                                                        console.log('No file selected');
+                        <>
+                            <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                height: showTerminal ? `calc(100% - ${terminalHeight}px)` : '100%',
+                                color: 'var(--text-secondary)',
+                                fontSize: '16px',
+                                transition: 'height 0.2s ease'
+                            }}>
+                                <div style={{ textAlign: 'center' }}>
+                                    <h2>Добро пожаловать в L2Api Agent!</h2>
+                                    <p>Откройте файл или папку для начала работы</p>
+                                    <div style={{ marginTop: '20px' }}>
+                                        <button 
+                                            className="button primary"
+                                            onClick={async () => {
+                                                console.log('Opening file dialog...');
+                                                console.log('electronAPI available:', !!window.electronAPI);
+                                                console.log('dialog available:', !!window.electronAPI?.dialog);
+                                                
+                                                if (window.electronAPI && window.electronAPI.dialog) {
+                                                    try {
+                                                        console.log('Calling dialog.openFile()...');
+                                                        const filePath = await window.electronAPI.dialog.openFile();
+                                                        console.log('Dialog returned:', filePath);
+                                                        if (filePath) {
+                                                            console.log('File opened from welcome screen:', filePath);
+                                                            await openFile(filePath);
+                                                        } else {
+                                                            console.log('No file selected');
+                                                        }
+                                                    } catch (error) {
+                                                        console.error('Failed to open file:', error);
+                                                        alert(`Ошибка открытия файла: ${error}`);
                                                     }
-                                                } catch (error) {
-                                                    console.error('Failed to open file:', error);
-                                                    alert(`Ошибка открытия файла: ${error}`);
+                                                } else {
+                                                    console.error('electronAPI or dialog not available');
+                                                    alert('electronAPI или dialog недоступны');
                                                 }
-                                            } else {
-                                                console.error('electronAPI or dialog not available');
-                                                alert('electronAPI или dialog недоступны');
-                                            }
-                                        }}
-                                        style={{ marginRight: '10px' }}
-                                    >
-                                        Открыть файл
-                                    </button>
-                                    <button 
-                                        className="button primary"
-                                        onClick={async () => {
-                                            console.log('Opening folder dialog...');
-                                            if (window.electronAPI && window.electronAPI.dialog) {
-                                                try {
-                                                    const projectPath = await window.electronAPI.dialog.openFolder();
-                                                    console.log('Dialog returned:', projectPath);
-                                                    if (projectPath) {
-                                                        console.log('Project opened from welcome screen:', projectPath);
-                                                        setCurrentProject(projectPath);
-                                                        await loadProjectFiles(projectPath);
+                                            }}
+                                            style={{ marginRight: '10px' }}
+                                        >
+                                            Открыть файл
+                                        </button>
+                                        <button 
+                                            className="button primary"
+                                            onClick={async () => {
+                                                console.log('Opening folder dialog...');
+                                                if (window.electronAPI && window.electronAPI.dialog) {
+                                                    try {
+                                                        const projectPath = await window.electronAPI.dialog.openFolder();
+                                                        console.log('Dialog returned:', projectPath);
+                                                        if (projectPath) {
+                                                            console.log('Project opened from welcome screen:', projectPath);
+                                                            setCurrentProject(projectPath);
+                                                            await loadProjectFiles(projectPath);
+                                                        }
+                                                    } catch (error) {
+                                                        console.error('Failed to open folder:', error);
                                                     }
-                                                } catch (error) {
-                                                    console.error('Failed to open folder:', error);
+                                                } else {
+                                                    console.error('electronAPI or dialog not available');
                                                 }
-                                            } else {
-                                                console.error('electronAPI or dialog not available');
-                                            }
-                                        }}
-                                    >
-                                        Открыть папку
-                                    </button>
+                                            }}
+                                        >
+                                            Открыть папку
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                            <Terminal
+                                isVisible={showTerminal}
+                                onClose={() => setShowTerminal(false)}
+                                onSendToAI={handleSendToAI}
+                                height={terminalHeight}
+                                onHeightChange={setTerminalHeight}
+                            />
+                        </>
                     ) : (
-                        <Editor
-                            ref={editorRef}
-                            openFiles={openFiles}
-                            activeFile={activeFile}
-                            fileContents={fileContents}
-                            modifiedFiles={modifiedFiles}
-                            onFileContentChange={updateFileContent}
-                            onFileClose={closeFile}
-                            onFileCloseRequest={handleFileCloseRequest}
-                            onFileSelect={setActiveFile}
-                            onFileSave={saveFile}
-                        />
+                        <>
+                            <div style={{ 
+                                height: showTerminal ? `calc(100% - ${terminalHeight}px)` : '100%',
+                                transition: 'height 0.2s ease'
+                            }}>
+                                <Editor
+                                    ref={editorRef}
+                                    openFiles={openFiles}
+                                    activeFile={activeFile}
+                                    fileContents={fileContents}
+                                    modifiedFiles={modifiedFiles}
+                                    onFileContentChange={updateFileContent}
+                                    onFileClose={closeFile}
+                                    onFileCloseRequest={handleFileCloseRequest}
+                                    onFileSelect={setActiveFile}
+                                    onFileSave={saveFile}
+                                />
+                            </div>
+                            <Terminal
+                                isVisible={showTerminal}
+                                onClose={() => setShowTerminal(false)}
+                                onSendToAI={handleSendToAI}
+                                height={terminalHeight}
+                                onHeightChange={setTerminalHeight}
+                            />
+                        </>
                     )}
                 </div>
 

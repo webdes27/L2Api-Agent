@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, Menu, dialog } from 'electron';
 import * as path from 'path';
+import { spawn, exec } from 'child_process';
 import { AIManager } from '../ai/AIManager';
 import { ProjectMemoryManager } from '../ai/memory/ProjectMemoryManager';
 
@@ -197,6 +198,14 @@ class L2ApiAgent {
                     { role: 'zoomIn' },
                     { role: 'zoomOut' },
                     { type: 'separator' },
+                    {
+                        label: 'Terminal',
+                        accelerator: 'Ctrl+`',
+                        click: () => {
+                            this.mainWindow?.webContents.send('toggle-terminal');
+                        }
+                    },
+                    { type: 'separator' },
                     { role: 'togglefullscreen' }
                 ]
             }
@@ -304,6 +313,54 @@ class L2ApiAgent {
                 return result.filePaths[0];
             }
             return null;
+        });
+
+        // Terminal handlers
+        ipcMain.handle('terminal:execute-command', async (event, command: string, workingDirectory: string) => {
+            try {
+                return new Promise((resolve, reject) => {
+                    // Use cmd.exe instead of PowerShell for better encoding support
+                    const fullCommand = `chcp 65001 >nul && ${command}`;
+                    
+                    exec(fullCommand, { 
+                        cwd: workingDirectory,
+                        shell: 'cmd.exe',
+                        maxBuffer: 1024 * 1024, // 1MB buffer
+                        encoding: 'utf8'
+                    }, (error, stdout, stderr) => {
+                        if (error) {
+                            resolve({
+                                output: `Error: ${error.message}\n${stderr}`,
+                                newDirectory: workingDirectory
+                            });
+                        } else {
+                            let newDirectory = workingDirectory;
+                            
+                            // Handle cd command
+                            if (command.trim().startsWith('cd ')) {
+                                const targetDir = command.trim().substring(3).trim();
+                                if (targetDir === '..') {
+                                    newDirectory = path.dirname(workingDirectory);
+                                } else if (targetDir.startsWith('\\') || targetDir.includes(':')) {
+                                    newDirectory = targetDir;
+                                } else {
+                                    newDirectory = path.join(workingDirectory, targetDir);
+                                }
+                            }
+                            
+                            resolve({
+                                output: stdout || stderr || 'Command executed successfully',
+                                newDirectory: newDirectory
+                            });
+                        }
+                    });
+                });
+            } catch (error) {
+                return {
+                    output: `Error: ${error instanceof Error ? error.message : String(error)}`,
+                    newDirectory: workingDirectory
+                };
+            }
         });
     }
 }
