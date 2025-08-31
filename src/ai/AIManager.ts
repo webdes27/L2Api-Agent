@@ -1,5 +1,6 @@
 import { OpenAIProvider } from './providers/OpenAIProvider';
 import { AnthropicProvider } from './providers/AnthropicProvider';
+import { GeminiAIProvider } from './providers/GeminiAIProvider';
 import { LocalModelProvider } from './providers/LocalModelProvider';
 import { AIProvider, AIMessage, AIResponse } from './types/AITypes';
 
@@ -46,6 +47,7 @@ export class AIManager {
         // Initialize built-in providers
         this.providers.set('openai', new OpenAIProvider());
         this.providers.set('anthropic', new AnthropicProvider());
+        this.providers.set('google', new GeminiAIProvider());
         this.providers.set('local', new LocalModelProvider());
     }
 

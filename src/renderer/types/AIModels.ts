@@ -15,20 +15,22 @@ export interface AIProvider {
 
 // Общий список всех моделей AI
 export const AI_MODELS: AIModel[] = [
-    // OpenAI Models
+    // OpenAI Models - Legacy (GPT-3.x)
     {
-        id: 'gpt-5',
-        name: 'GPT-5',
+        id: 'gpt-3.5-turbo',
+        name: 'GPT-3.5 Turbo',
         provider: 'openai',
-        description: 'OpenAI\'s next generation model. Most advanced reasoning.',
-        contextWindow: '128k context window',
-        version: 'Version: GPT-5-preview'
+        description: 'Fast and efficient for most tasks.',
+        contextWindow: '16k context window',
+        version: 'Version: gpt-3.5-turbo'
     },
+    
+    // OpenAI Models - Generation 4.x
     {
         id: 'gpt-4',
         name: 'GPT-4',
         provider: 'openai',
-        description: 'OpenAI\'s latest model. Powerful, for daily and complex tasks alike.',
+        description: 'OpenAI\'s powerful model for daily and complex tasks.',
         contextWindow: '8k context window',
         version: 'Version: GPT-4-0613'
     },
@@ -40,39 +42,35 @@ export const AI_MODELS: AIModel[] = [
         contextWindow: '128k context window',
         version: 'Version: GPT-4-turbo'
     },
+    
+    // OpenAI Models - Generation 5.x (newest)
     {
-        id: 'gpt-3.5-turbo',
-        name: 'GPT-3.5 Turbo',
+        id: 'gpt-5',
+        name: 'GPT-5',
         provider: 'openai',
-        description: 'Fast and efficient for most tasks.',
-        contextWindow: '16k context window',
-        version: 'Version: gpt-3.5-turbo'
+        description: 'OpenAI\'s next generation model. Most advanced reasoning.',
+        contextWindow: '128k context window',
+        version: 'Version: GPT-5-preview'
     },
 
-    // Anthropic Models
+    // Anthropic Models - Legacy (Claude 2.x)
     {
-        id: 'claude-4-sonnet',
-        name: 'claude-4-sonnet-1m',
+        id: 'claude-2.1',
+        name: 'Claude 2.1',
         provider: 'anthropic',
-        description: 'Claude 4 Sonnet with 1M context',
-        contextWindow: '1M context window',
-        version: 'Version: claude-4-sonnet'
-    },
-    {
-        id: 'claude-4.1-opus',
-        name: 'claude-4.1-opus',
-        provider: 'anthropic',
-        description: 'Most capable Claude model',
+        description: 'Previous generation Claude model',
         contextWindow: '200k context window',
-        version: 'Version: claude-4.1'
+        version: 'Version: claude-2.1'
     },
+    
+    // Anthropic Models - Generation 3.x
     {
-        id: 'claude-3-opus-20240229',
-        name: 'Claude 3 Opus',
+        id: 'claude-3-haiku-20240307',
+        name: 'Claude 3 Haiku',
         provider: 'anthropic',
-        description: 'Claude\'s most powerful model for complex tasks',
+        description: 'Fast and lightweight Claude model',
         contextWindow: '200k context window',
-        version: 'Version: claude-3-opus'
+        version: 'Version: claude-3-haiku'
     },
     {
         id: 'claude-3-sonnet-20240229',
@@ -83,30 +81,116 @@ export const AI_MODELS: AIModel[] = [
         version: 'Version: claude-3-sonnet'
     },
     {
-        id: 'claude-3-haiku-20240307',
-        name: 'Claude 3 Haiku',
+        id: 'claude-3-opus-20240229',
+        name: 'Claude 3 Opus',
         provider: 'anthropic',
-        description: 'Fast and lightweight Claude model',
+        description: 'Claude\'s most powerful model for complex tasks',
         contextWindow: '200k context window',
-        version: 'Version: claude-3-haiku'
+        version: 'Version: claude-3-opus'
+    },
+    
+    // Anthropic Models - Generation 4.x (newest)
+    {
+        id: 'claude-4-sonnet',
+        name: 'Claude 4 Sonnet',
+        provider: 'anthropic',
+        description: 'Claude 4 Sonnet with 1M context',
+        contextWindow: '1M context window',
+        version: 'Version: claude-4-sonnet'
     },
     {
-        id: 'claude-2.1',
-        name: 'Claude 2.1',
+        id: 'claude-4.1-opus',
+        name: 'Claude 4.1 Opus',
         provider: 'anthropic',
-        description: 'Previous generation Claude model',
+        description: 'Most capable Claude model',
         contextWindow: '200k context window',
-        version: 'Version: claude-2.1'
+        version: 'Version: claude-4.1'
     },
 
-    // Google Models
+    // Google Models - Legacy (без версии)
+    {
+        id: 'gemini-pro',
+        name: 'Gemini Pro',
+        provider: 'google',
+        description: 'Standard model for general tasks',
+        contextWindow: '32k context window',
+        version: 'Version: gemini-pro'
+    },
+    {
+        id: 'gemini-pro-vision',
+        name: 'Gemini Pro Vision',
+        provider: 'google',
+        description: 'Multimodal model with image understanding',
+        contextWindow: '16k context window',
+        version: 'Version: gemini-pro-vision'
+    },
+    
+    // Google Models - Generation 1.5
+    {
+        id: 'gemini-1.5-pro',
+        name: 'Gemini 1.5 Pro',
+        provider: 'google',
+        description: 'Capable model for complex reasoning tasks',
+        contextWindow: '1M context window',
+        version: 'Version: gemini-1.5-pro'
+    },
+    {
+        id: 'gemini-1.5-pro-latest',
+        name: 'Gemini 1.5 Pro (Latest)',
+        provider: 'google',
+        description: 'Latest 1.5 generation advanced model with 2M context',
+        contextWindow: '2M context window',
+        version: 'Version: gemini-1.5-pro-latest'
+    },
+    {
+        id: 'gemini-1.5-flash',
+        name: 'Gemini 1.5 Flash',
+        provider: 'google',
+        description: 'Efficient model for quick responses',
+        contextWindow: '1M context window',
+        version: 'Version: gemini-1.5-flash'
+    },
+    {
+        id: 'gemini-1.5-flash-latest',
+        name: 'Gemini 1.5 Flash (Latest)',
+        provider: 'google',
+        description: 'Latest fast model with multimodal capabilities',
+        contextWindow: '1M context window',
+        version: 'Version: gemini-1.5-flash-latest'
+    },
+    
+    // Google Models - Generation 2.5 (newest)
     {
         id: 'gemini-2.5-pro',
-        name: 'gemini-2.5-pro',
+        name: 'Gemini 2.5 Pro',
         provider: 'google',
-        description: 'Google\'s advanced reasoning model',
-        contextWindow: '1M context window',
+        description: 'Advanced reasoning model with improved capabilities',
+        contextWindow: '2M context window',
         version: 'Version: gemini-2.5-pro'
+    },
+    {
+        id: 'gemini-2.5-pro-latest',
+        name: 'Gemini 2.5 Pro (Latest)',
+        provider: 'google',
+        description: 'Google\'s newest and most advanced model with enhanced reasoning',
+        contextWindow: '2M context window',
+        version: 'Version: gemini-2.5-pro-latest'
+    },
+    {
+        id: 'gemini-2.5-flash',
+        name: 'Gemini 2.5 Flash',
+        provider: 'google',
+        description: 'High-performance model optimized for speed',
+        contextWindow: '1M context window',
+        version: 'Version: gemini-2.5-flash'
+    },
+    {
+        id: 'gemini-2.5-flash-latest',
+        name: 'Gemini 2.5 Flash (Latest)',
+        provider: 'google',
+        description: 'Fastest Gemini model with enhanced speed and efficiency',
+        contextWindow: '1M context window',
+        version: 'Version: gemini-2.5-flash-latest'
     },
 
     // DeepSeek Models

@@ -28,8 +28,17 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
 
     const [anthropicConfig, setAnthropicConfig] = useState({
         apiKey: '',
-        model: 'claude-4-sonnet',
+        model: 'claude-4.1-opus',
         maxTokens: 4000
+    });
+
+    const [googleConfig, setGoogleConfig] = useState({
+        apiKey: '',
+        model: 'gemini-2.5-pro-latest',
+        temperature: 0.7,
+        maxTokens: 2048,
+        topP: 0.95,
+        topK: 40
     });
 
     const [localConfig, setLocalConfig] = useState({
@@ -74,6 +83,11 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
             setAnthropicConfig(JSON.parse(savedAnthropic));
         }
 
+        const savedGoogle = localStorage.getItem('ai-config-google');
+        if (savedGoogle) {
+            setGoogleConfig(JSON.parse(savedGoogle));
+        }
+
         const savedLocal = localStorage.getItem('ai-config-local');
         if (savedLocal) {
             setLocalConfig(JSON.parse(savedLocal));
@@ -94,6 +108,10 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
                 case 'anthropic':
                     config = anthropicConfig;
                     localStorage.setItem('ai-config-anthropic', JSON.stringify(anthropicConfig));
+                    break;
+                case 'google':
+                    config = googleConfig;
+                    localStorage.setItem('ai-config-google', JSON.stringify(googleConfig));
                     break;
                 case 'local':
                     config = localConfig;
@@ -240,6 +258,97 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
                                 min="1"
                                 max="200000"
                             />
+                        </div>
+                    </div>
+                );
+
+            case 'google':
+                return (
+                    <div>
+                        <div className="form-group">
+                            <label className="form-label">API Key</label>
+                            <input
+                                type="password"
+                                className="form-input"
+                                value={googleConfig.apiKey}
+                                onChange={(e) => setGoogleConfig(prev => ({ ...prev, apiKey: e.target.value }))}
+                                placeholder="AIzaSy..."
+                            />
+                            <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                Получите API ключ в <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>
+                            </small>
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Model</label>
+                            <select
+                                className="form-select"
+                                value={googleConfig.model}
+                                onChange={(e) => setGoogleConfig(prev => ({ ...prev, model: e.target.value }))}
+                            >
+                                {getModelsByProvider('google').map(model => (
+                                    <option key={model.id} value={model.id}>{model.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Temperature: {googleConfig.temperature}</label>
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.1"
+                                value={googleConfig.temperature}
+                                onChange={(e) => setGoogleConfig(prev => ({ ...prev, temperature: parseFloat(e.target.value) }))}
+                                style={{ width: '100%' }}
+                            />
+                            <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                Контролирует креативность ответов
+                            </small>
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Max Tokens</label>
+                            <input
+                                type="number"
+                                className="form-input"
+                                value={googleConfig.maxTokens}
+                                onChange={(e) => setGoogleConfig(prev => ({ ...prev, maxTokens: parseInt(e.target.value) }))}
+                                min="1"
+                                max="2048"
+                            />
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Top P: {googleConfig.topP}</label>
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.05"
+                                value={googleConfig.topP}
+                                onChange={(e) => setGoogleConfig(prev => ({ ...prev, topP: parseFloat(e.target.value) }))}
+                                style={{ width: '100%' }}
+                            />
+                            <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                Контролирует разнообразие ответов
+                            </small>
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Top K</label>
+                            <input
+                                type="number"
+                                className="form-input"
+                                value={googleConfig.topK}
+                                onChange={(e) => setGoogleConfig(prev => ({ ...prev, topK: parseInt(e.target.value) }))}
+                                min="1"
+                                max="100"
+                            />
+                            <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                Количество рассматриваемых токенов (1-100)
+                            </small>
                         </div>
                     </div>
                 );

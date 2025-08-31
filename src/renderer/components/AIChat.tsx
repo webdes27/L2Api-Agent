@@ -398,8 +398,8 @@ const AIChat: React.FC<AIChatProps> = ({
                         {message.context?.filePath && (
                             <div className="message-context">
                                 <small>Context: {message.context.filePath}</small>
-                            </div>
-                        )}
+                                    </div>
+                                )}
                     </div>
                 ))}
                 
@@ -435,7 +435,7 @@ const AIChat: React.FC<AIChatProps> = ({
                             <div className="progress-ring"></div>
                         </div>
                     </div>
-                </div>
+                    </div>
                 
                 {/* Main Input */}
                 <div className="input-container">
@@ -575,8 +575,8 @@ const AIChat: React.FC<AIChatProps> = ({
                     onChange={handleFileSelect}
                     style={{ display: 'none' }}
                 />
-            </div>
-
+                </div>
+                
             {/* Status Bar */}
             <div className="ai-status-bar">
                 <div className="status-left">
