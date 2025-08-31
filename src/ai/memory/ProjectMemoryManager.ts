@@ -12,6 +12,10 @@ export interface ProjectMemory {
         lastOpened: number;
         openFiles: string[];
         recentChanges: FileChange[];
+        terminalState?: {
+            isOpen: boolean;
+            height: number;
+        };
         gitInfo?: {
             branch: string;
             lastCommit: string;
@@ -73,6 +77,7 @@ export class ProjectMemoryManager {
                     lastOpened: Date.now(),
                     openFiles: state.openFiles,
                     recentChanges: state.recentChanges,
+                    terminalState: state.metadata?.terminalState,
                     gitInfo,
                     userPreferences: state.metadata?.userPreferences || {},
                     projectStats

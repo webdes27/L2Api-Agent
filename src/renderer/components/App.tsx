@@ -26,6 +26,14 @@ const App: React.FC = () => {
     const [showAISettings, setShowAISettings] = useState(false);
     const [showTerminal, setShowTerminal] = useState(false);
     const [terminalHeight, setTerminalHeight] = useState(300);
+    
+    // Wrapper for setTerminalHeight that also saves state
+    const updateTerminalHeight = (height: number) => {
+        console.log('updateTerminalHeight called with height:', height);
+        setTerminalHeight(height);
+        // Save state immediately when terminal height changes
+        setTimeout(() => saveProjectState(), 100);
+    };
     const [aiProvider, setAiProvider] = useState<string>('');
     const [projectFiles, setProjectFiles] = useState<FileNode[]>([]);
     
@@ -97,7 +105,13 @@ const App: React.FC = () => {
 
             window.electronAPI.on('toggle-terminal', () => {
                 console.log('Toggle Terminal requested');
-                setShowTerminal(prev => !prev);
+                setShowTerminal(prev => {
+                    const newState = !prev;
+                    console.log('Terminal state changing from', prev, 'to', newState);
+                    // Save state immediately when terminal is toggled
+                    setTimeout(() => saveProjectState(), 100);
+                    return newState;
+                });
             });
 
             window.electronAPI.on('save-file', () => {
@@ -151,6 +165,32 @@ const App: React.FC = () => {
         console.log('Final fileNodes:', fileNodes);
         setProjectFiles(fileNodes);
         console.log('Project files set successfully');
+
+        // Load project state including terminal state
+        try {
+            console.log('Attempting to load project state for:', projectPath);
+            const projectState = await window.electronAPI.memory.loadProjectState(projectPath);
+            console.log('Loaded project state:', projectState);
+            
+            if (projectState) {
+                console.log('Project state exists, checking metadata:', projectState.metadata);
+                if (projectState.metadata && projectState.metadata.terminalState) {
+                    const { isOpen, height } = projectState.metadata.terminalState;
+                    console.log('Found terminal state:', { isOpen, height });
+                    console.log('Setting showTerminal to:', isOpen);
+                    setShowTerminal(isOpen);
+                    console.log('Setting terminal height to:', height);
+                    updateTerminalHeight(height);
+                    console.log('Terminal state restored successfully:', { isOpen, height });
+                } else {
+                    console.log('No terminal state found in project state metadata:', projectState.metadata);
+                }
+            } else {
+                console.log('No project state found for path:', projectPath);
+            }
+        } catch (error) {
+            console.error('Failed to load project state:', error);
+        }
     };
 
     const handleFolderToggle = async (folderPath: string) => {
@@ -452,12 +492,19 @@ const App: React.FC = () => {
                 recentChanges: [], // This would track file changes
                 metadata: {
                     activeFile,
-                    aiProvider
+                    aiProvider,
+                    terminalState: {
+                        isOpen: showTerminal,
+                        height: terminalHeight
+                    }
                 }
             };
 
+            console.log('Saving project state with terminal state:', state.metadata.terminalState);
+
             try {
                 await window.electronAPI.memory.saveProjectState(currentProject, state);
+                console.log('Project state saved successfully');
             } catch (error) {
                 console.error('Failed to save project state:', error);
             }
@@ -468,7 +515,7 @@ const App: React.FC = () => {
     useEffect(() => {
         const interval = setInterval(saveProjectState, 30000); // Every 30 seconds
         return () => clearInterval(interval);
-    }, [currentProject, openFiles, activeFile, aiProvider]);
+    }, [currentProject, openFiles, activeFile, aiProvider, showTerminal]);
 
     // Helper function to get file language from extension
     const getFileLanguage = (filePath: string | null): string => {
@@ -676,7 +723,7 @@ const App: React.FC = () => {
                                 onClose={() => setShowTerminal(false)}
                                 onSendToAI={handleSendToAI}
                                 height={terminalHeight}
-                                onHeightChange={setTerminalHeight}
+                                onHeightChange={updateTerminalHeight}
                             />
                         </>
                     ) : (
@@ -703,7 +750,7 @@ const App: React.FC = () => {
                                 onClose={() => setShowTerminal(false)}
                                 onSendToAI={handleSendToAI}
                                 height={terminalHeight}
-                                onHeightChange={setTerminalHeight}
+                                onHeightChange={updateTerminalHeight}
                             />
                         </>
                     )}
