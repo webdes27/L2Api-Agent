@@ -66,10 +66,9 @@ const App: React.FC = () => {
                     // Load the provider in main process
                     console.log('Loading provider in main process:', localStorageProvider);
                     try {
-                        // Temporarily disabled due to TypeScript issues
-                        // const loadResult = await window.electronAPI.ai.loadProvider(localStorageProvider);
-                        // console.log('Load provider result:', loadResult);
-                        console.log('Provider loading temporarily disabled');
+                        // @ts-ignore - loadProvider method exists but TypeScript doesn't see it
+                        const loadResult = await window.electronAPI.ai.loadProvider(localStorageProvider);
+                        console.log('Load provider result:', loadResult);
                     } catch (error) {
                         console.error('Failed to load provider in main process:', error);
                     }

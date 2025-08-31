@@ -169,6 +169,14 @@ export const AI_MODELS: AIModel[] = [
         version: 'Version: gemini-2.0-flash'
     },
     {
+        id: 'gemini-2.0-flash-lite',
+        name: 'Gemini 2.0 Flash Lite',
+        provider: 'google',
+        description: 'Lightweight and fast Gemini 2.0 model',
+        contextWindow: '1M context window',
+        version: 'Version: gemini-2.0-flash-lite'
+    },
+    {
         id: 'gemini-2.0-pro',
         name: 'Gemini 2.0 Pro',
         provider: 'google',
@@ -209,6 +217,14 @@ export const AI_MODELS: AIModel[] = [
         description: 'Fastest Gemini model with enhanced speed and efficiency',
         contextWindow: '1M context window',
         version: 'Version: gemini-2.5-flash-latest'
+    },
+    {
+        id: 'gemma-3-27b-it',
+        name: 'Gemma 3 27B IT',
+        provider: 'google',
+        description: 'Google\'s Gemma 3 27B instruction-tuned model',
+        contextWindow: '8k context window',
+        version: 'Version: gemma-3-27b-it'
     },
 
     // DeepSeek Models

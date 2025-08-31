@@ -143,7 +143,7 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
 
     const [googleConfig, setGoogleConfig] = useState({
         apiKey: '',
-        model: 'gemini-2.5-pro-latest',
+        model: 'gemini-2.0-flash',
         temperature: 0.7,
         maxTokens: 2048,
         topP: 0.95,
@@ -247,6 +247,15 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
                 // Сохраняем ID текущего провайдера в localStorage
                 localStorage.setItem('ai-current-provider', selectedProvider);
                 console.log('AISettings: Saved current provider to localStorage:', selectedProvider);
+                
+                // Загружаем провайдер в main процесс
+                try {
+                    // @ts-ignore - loadProvider method exists but TypeScript doesn't see it
+                    const loadResult = await window.electronAPI.ai.loadProvider(selectedProvider);
+                    console.log('AISettings: Load provider result:', loadResult);
+                } catch (error) {
+                    console.error('AISettings: Failed to load provider in main process:', error);
+                }
                 
                 onProviderChange(selectedProvider);
                 setErrorDialog({

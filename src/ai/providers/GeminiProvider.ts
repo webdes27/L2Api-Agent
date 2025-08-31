@@ -150,7 +150,15 @@ export class GeminiProvider {
                 } else if (error.response?.status === 400) {
                     const errorMessage = error.response.data?.error?.message || 'Bad request to Gemini API';
                     console.error('Gemini API 400 error details:', error.response.data);
-                    throw new Error(`Gemini API error: ${errorMessage}`);
+                    
+                    // Проверяем специфические ошибки
+                    if (errorMessage.includes('User location is not supported')) {
+                        throw new Error(`Model '${this.config.model}' is not available in your region. Please try a different model.`);
+                    } else if (errorMessage.includes('model not found')) {
+                        throw new Error(`Model '${this.config.model}' not found. Please check the model name.`);
+                    } else {
+                        throw new Error(`Gemini API error: ${errorMessage}`);
+                    }
                 } else if (error.response?.status === 403) {
                     throw new Error('Gemini API access denied. Check API key permissions.');
                 } else if (error.response?.status === 404) {
@@ -207,13 +215,18 @@ export class GeminiProvider {
             
             // Generation 2.0
             'gemini-2.0-flash',
+            'gemini-2.0-flash-lite',
             'gemini-2.0-pro',
             
             // Generation 2.5 (newest)
             'gemini-2.5-pro',
             'gemini-2.5-pro-latest',
             'gemini-2.5-flash',
-            'gemini-2.5-flash-latest'
+            'gemini-2.5-flash-lite',
+            'gemini-2.5-flash-latest',
+            
+            // Gemma Models
+            'gemma-3-27b-it'
         ];
     }
 
