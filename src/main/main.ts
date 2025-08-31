@@ -12,6 +12,12 @@ class L2ApiAgent {
     constructor() {
         this.aiManager = new AIManager();
         this.memoryManager = new ProjectMemoryManager();
+        
+        // Set up logging callback for AIManager
+        this.aiManager.setLogCallback((message: string) => {
+            this.mainWindow?.webContents.send('main-log', message);
+        });
+        
         this.initializeApp();
     }
 
@@ -222,11 +228,68 @@ class L2ApiAgent {
         });
 
         ipcMain.handle('ai:get-providers', async () => {
-            return this.aiManager.getAvailableProviders();
+            console.log('Main: ai:get-providers called');
+            // Send log to renderer
+            this.mainWindow?.webContents.send('main-log', 'Main: ai:get-providers called');
+            
+            const providers = this.aiManager.getAvailableProviders();
+            console.log('Main: ai:get-providers result:', providers);
+            // Send log to renderer
+            this.mainWindow?.webContents.send('main-log', `Main: ai:get-providers result: ${JSON.stringify(providers)}`);
+            
+            // Log each provider's configuration status
+            providers.forEach(provider => {
+                this.mainWindow?.webContents.send('main-log', `Main: Provider ${provider.id} isConfigured: ${provider.isConfigured}`);
+            });
+            
+            return providers;
+        });
+
+        ipcMain.handle('ai:get-current-provider', async () => {
+            return this.aiManager.getCurrentProvider();
+        });
+
+        ipcMain.handle('ai:load-provider', async (event, providerId: string) => {
+            console.log('Main: ai:load-provider called with:', providerId);
+            this.mainWindow?.webContents.send('main-log', `Main: ai:load-provider called with: ${providerId}`);
+            
+            try {
+                const result = await this.aiManager.loadProviderById(providerId);
+                console.log('Main: ai:load-provider result:', result);
+                this.mainWindow?.webContents.send('main-log', `Main: ai:load-provider result: ${result}`);
+                return result;
+            } catch (error) {
+                console.error('Main: ai:load-provider error:', error);
+                this.mainWindow?.webContents.send('main-log', `Main: ai:load-provider error: ${error}`);
+                throw error;
+            }
         });
 
         ipcMain.handle('ai:set-provider', async (event, providerId: string, config: any) => {
-            return this.aiManager.setProvider(providerId, config);
+            console.log('Main: ai:set-provider called with:', { providerId, config: { ...config, apiKey: config.apiKey ? '***' : 'undefined' } });
+            // Send log to renderer
+            this.mainWindow?.webContents.send('main-log', `Main: ai:set-provider called with: ${providerId}`);
+            this.mainWindow?.webContents.send('main-log', `Main: ai:set-provider config keys: ${Object.keys(config).join(', ')}`);
+            this.mainWindow?.webContents.send('main-log', `Main: ai:set-provider has apiKey: ${!!config.apiKey}`);
+            
+            try {
+                const result = await this.aiManager.setProvider(providerId, config);
+                console.log('Main: ai:set-provider result:', result);
+                // Send log to renderer
+                this.mainWindow?.webContents.send('main-log', `Main: ai:set-provider result: ${result}`);
+                
+                // After setting provider, check if it's now configured
+                const providers = this.aiManager.getAvailableProviders();
+                const provider = providers.find(p => p.id === providerId);
+                this.mainWindow?.webContents.send('main-log', `Main: After setProvider, ${providerId} isConfigured: ${provider?.isConfigured}`);
+                
+                return result;
+            } catch (error) {
+                console.error('Main: ai:set-provider error:', error);
+                // Send error to renderer
+                this.mainWindow?.webContents.send('main-log', `Main: ai:set-provider error: ${error}`);
+                throw error;
+            }
         });
 
         // AI UI handlers

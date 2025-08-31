@@ -7,10 +7,30 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ai: {
         sendMessage: (message: string, context?: any) => 
             ipcRenderer.invoke('ai:send-message', message, context),
-        getProviders: () => 
-            ipcRenderer.invoke('ai:get-providers'),
-        setProvider: (providerId: string, config: any) => 
-            ipcRenderer.invoke('ai:set-provider', providerId, config),
+        getProviders: () => {
+            console.log('Preload: getProviders called');
+            return ipcRenderer.invoke('ai:get-providers').then((result) => {
+                console.log('Preload: getProviders result:', result);
+                return result;
+            }).catch((error) => {
+                console.error('Preload: getProviders error:', error);
+                throw error;
+            });
+        },
+        getCurrentProvider: () => 
+            ipcRenderer.invoke('ai:get-current-provider'),
+        loadProvider: (providerId: string) => 
+            ipcRenderer.invoke('ai:load-provider', providerId),
+        setProvider: (providerId: string, config: any) => {
+            console.log('Preload: setProvider called with:', { providerId, config: { ...config, apiKey: config.apiKey ? '***' : 'undefined' } });
+            return ipcRenderer.invoke('ai:set-provider', providerId, config).then((result) => {
+                console.log('Preload: setProvider result:', result);
+                return result;
+            }).catch((error) => {
+                console.error('Preload: setProvider error:', error);
+                throw error;
+            });
+        },
         showChat: () => ipcRenderer.invoke('ai:show-chat'),
         showSettings: () => ipcRenderer.invoke('ai:show-settings')
     },
@@ -54,7 +74,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
             'toggle-terminal',
             'project:opened',
             'project:state-loaded',
-            'file:opened'
+            'file:opened',
+            'main-log'
         ];
         
         if (validChannels.includes(channel)) {
@@ -75,6 +96,8 @@ declare global {
             ai: {
                 sendMessage: (message: string, context?: any) => Promise<any>;
                 getProviders: () => Promise<any[]>;
+                getCurrentProvider: () => Promise<string | null>;
+                loadProvider: (providerId: string) => Promise<boolean>;
                 setProvider: (providerId: string, config: any) => Promise<boolean>;
                 showChat: () => Promise<boolean>;
                 showSettings: () => Promise<boolean>;

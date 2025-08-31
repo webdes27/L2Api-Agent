@@ -35,6 +35,70 @@ const App: React.FC = () => {
         setTimeout(() => saveProjectState(), 100);
     };
     const [aiProvider, setAiProvider] = useState<string>('');
+    
+    // Обертка для setAiProvider, которая также сохраняет в localStorage
+    const updateAiProvider = (providerId: string) => {
+        console.log('updateAiProvider called with:', providerId);
+        setAiProvider(providerId);
+        if (providerId) {
+            localStorage.setItem('ai-current-provider', providerId);
+            console.log('Saved provider to localStorage:', providerId);
+        } else {
+            localStorage.removeItem('ai-current-provider');
+            console.log('Removed provider from localStorage');
+        }
+    };
+    
+    // Load saved AI provider on app start
+    useEffect(() => {
+        const loadSavedAIProvider = async () => {
+            try {
+                console.log('Attempting to load saved AI provider...');
+                
+                // Сначала проверяем localStorage
+                const localStorageProvider = localStorage.getItem('ai-current-provider');
+                console.log('localStorage provider:', localStorageProvider);
+                
+                if (localStorageProvider) {
+                    console.log('Found provider in localStorage:', localStorageProvider);
+                    setAiProvider(localStorageProvider);
+                    
+                    // Load the provider in main process
+                    console.log('Loading provider in main process:', localStorageProvider);
+                    try {
+                        // Temporarily disabled due to TypeScript issues
+                        // const loadResult = await window.electronAPI.ai.loadProvider(localStorageProvider);
+                        // console.log('Load provider result:', loadResult);
+                        console.log('Provider loading temporarily disabled');
+                    } catch (error) {
+                        console.error('Failed to load provider in main process:', error);
+                    }
+                } else {
+                    // Если в localStorage нет, проверяем через getCurrentProvider
+                    console.log('No provider in localStorage, checking getCurrentProvider...');
+                    const savedProvider = await window.electronAPI.ai.getCurrentProvider();
+                    console.log('getCurrentProvider returned:', savedProvider);
+                    if (savedProvider) {
+                        console.log('Loaded saved AI provider from getCurrentProvider:', savedProvider);
+                        setAiProvider(savedProvider);
+                    } else {
+                        console.log('No saved AI provider found, setting default to empty string');
+                        setAiProvider('');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load saved AI provider:', error);
+                setAiProvider('');
+            }
+        };
+        
+        if (window.electronAPI && window.electronAPI.ai) {
+            console.log('electronAPI.ai is available, loading provider...');
+            loadSavedAIProvider();
+        } else {
+            console.log('electronAPI.ai is not available yet');
+        }
+    }, []);
     const [projectFiles, setProjectFiles] = useState<FileNode[]>([]);
     
     // Panel sizes state
@@ -119,6 +183,17 @@ const App: React.FC = () => {
                     saveFile(activeFile);
                 }
             });
+
+            // Listen for main process logs
+            window.electronAPI.on('main-log', (...args: any[]) => {
+                // Extract the actual message from the event arguments
+                const message = args[0];
+                if (typeof message === 'string') {
+                    console.log('Main Process Log:', message);
+                } else {
+                    console.log('Main Process Log (event object):', message);
+                }
+            });
         }
 
         return () => {
@@ -131,6 +206,7 @@ const App: React.FC = () => {
                 window.electronAPI.removeAllListeners('show-ai-settings');
                 window.electronAPI.removeAllListeners('toggle-terminal');
                 window.electronAPI.removeAllListeners('save-file');
+                window.electronAPI.removeAllListeners('main-log');
             }
         };
     }, [activeFile]);
@@ -142,10 +218,10 @@ const App: React.FC = () => {
             console.log('Directory contents:', files);
             
             const fileNodes = files.map((file: any) => {
-                const node: FileNode = {
-                    name: file.name,
-                    path: file.path,
-                    isDirectory: file.isDirectory,
+                    const node: FileNode = {
+                        name: file.name,
+                        path: file.path,
+                        isDirectory: file.isDirectory,
                     isFile: file.isFile,
                     children: file.isDirectory ? [] : undefined // Empty array for directories, undefined for files
                 };
@@ -233,10 +309,10 @@ const App: React.FC = () => {
     const openFile = async (filePath: string) => {
         console.log('openFile called with:', filePath);
         
-        try {
+            try {
             // Always read the file content
             console.log('Reading file content...');
-            const content = await window.electronAPI.fs.readFile(filePath);
+                const content = await window.electronAPI.fs.readFile(filePath);
             console.log('File content length:', content.length);
             
             // Update file contents
@@ -624,12 +700,12 @@ const App: React.FC = () => {
                         flex: `0 0 ${sidebarWidth}px`
                     }}
                 >
-                    <Sidebar
-                        projectFiles={projectFiles}
-                        onFileSelect={openFile}
+                <Sidebar
+                    projectFiles={projectFiles}
+                    onFileSelect={openFile}
                         onFolderToggle={handleFolderToggle}
-                        currentProject={currentProject}
-                    />
+                    currentProject={currentProject}
+                />
                 </div>
 
                 {/* Разделитель для левой панели */}
@@ -732,19 +808,19 @@ const App: React.FC = () => {
                                 height: showTerminal ? `calc(100% - ${terminalHeight}px)` : '100%',
                                 transition: 'height 0.2s ease'
                             }}>
-                                <Editor
+                    <Editor
                                     ref={editorRef}
-                                    openFiles={openFiles}
-                                    activeFile={activeFile}
-                                    fileContents={fileContents}
+                        openFiles={openFiles}
+                        activeFile={activeFile}
+                        fileContents={fileContents}
                                     modifiedFiles={modifiedFiles}
-                                    onFileContentChange={updateFileContent}
-                                    onFileClose={closeFile}
+                        onFileContentChange={updateFileContent}
+                        onFileClose={closeFile}
                                     onFileCloseRequest={handleFileCloseRequest}
-                                    onFileSelect={setActiveFile}
-                                    onFileSave={saveFile}
-                                />
-                            </div>
+                        onFileSelect={setActiveFile}
+                        onFileSave={saveFile}
+                    />
+                </div>
                             <Terminal
                                 isVisible={showTerminal}
                                 onClose={() => setShowTerminal(false)}
@@ -777,10 +853,10 @@ const App: React.FC = () => {
                     }}
                 >
                     {showAIChat ? (
-                        <AIChat
-                            onClose={() => setShowAIChat(false)}
+                    <AIChat
+                        onClose={() => setShowAIChat(false)}
                             currentFile={activeFile || undefined}
-                            selectedCode=""
+                        selectedCode=""
                             projectPath={currentProject || undefined}
                             fileContent={fileContents.get(activeFile || '')}
                             fileLanguage={getFileLanguage(activeFile)}
@@ -789,7 +865,7 @@ const App: React.FC = () => {
                     ) : showAISettings ? (
                         <AISettings
                             onClose={() => setShowAISettings(false)}
-                            onProviderChange={setAiProvider}
+                            onProviderChange={updateAiProvider}
                         />
                     ) : (
                         <div className="ai-welcome">

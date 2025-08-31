@@ -56,6 +56,10 @@ export class GeminiProvider {
         systemPrompt?: string
     ): Promise<string> {
         try {
+            console.log('GeminiProvider.generateContent: Starting request...');
+            console.log('GeminiProvider.generateContent: Model:', this.config.model);
+            console.log('GeminiProvider.generateContent: Messages count:', messages.length);
+            
             // Объединяем системный промпт с сообщениями пользователя
             const contents: GeminiMessage[] = [];
             
@@ -101,12 +105,16 @@ export class GeminiProvider {
                 ]
             };
 
+            console.log('GeminiProvider.generateContent: Request URL:', `${this.baseURL}/models/${this.config.model}:generateContent`);
+            console.log('GeminiProvider.generateContent: Request body:', JSON.stringify(requestBody, null, 2));
+
             const response = await axios.post<GeminiResponse>(
-                `${this.baseURL}/models/${this.config.model}:generateContent?key=${this.config.apiKey}`,
+                `${this.baseURL}/models/${this.config.model}:generateContent`,
                 requestBody,
                 {
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-goog-api-key': this.config.apiKey
                     },
                     timeout: 30000
                 }
@@ -126,6 +134,13 @@ export class GeminiProvider {
 
         } catch (error) {
             console.error('Gemini API error:', error);
+            console.error('Error details:', {
+                isAxiosError: axios.isAxiosError(error),
+                status: axios.isAxiosError(error) ? error.response?.status : 'N/A',
+                statusText: axios.isAxiosError(error) ? error.response?.statusText : 'N/A',
+                data: axios.isAxiosError(error) ? error.response?.data : 'N/A',
+                message: error instanceof Error ? error.message : 'Unknown error'
+            });
             
             if (axios.isAxiosError(error)) {
                 if (error.response?.status === 401) {
@@ -134,7 +149,12 @@ export class GeminiProvider {
                     throw new Error('Gemini API rate limit exceeded');
                 } else if (error.response?.status === 400) {
                     const errorMessage = error.response.data?.error?.message || 'Bad request to Gemini API';
+                    console.error('Gemini API 400 error details:', error.response.data);
                     throw new Error(`Gemini API error: ${errorMessage}`);
+                } else if (error.response?.status === 403) {
+                    throw new Error('Gemini API access denied. Check API key permissions.');
+                } else if (error.response?.status === 404) {
+                    throw new Error('Gemini model not found. Check model name.');
                 }
             }
             
@@ -185,6 +205,10 @@ export class GeminiProvider {
             'gemini-1.5-flash',
             'gemini-1.5-flash-latest',
             
+            // Generation 2.0
+            'gemini-2.0-flash',
+            'gemini-2.0-pro',
+            
             // Generation 2.5 (newest)
             'gemini-2.5-pro',
             'gemini-2.5-pro-latest',
@@ -197,20 +221,27 @@ export class GeminiProvider {
     static supportsImages(model: string): boolean {
         return model.includes('vision') || 
                model.includes('1.5') || 
+               model.includes('2.0') ||
                model.includes('2.5');
     }
 
     // Проверка валидности API ключа
     async validateApiKey(): Promise<boolean> {
         try {
+            console.log('GeminiProvider.validateApiKey: Starting validation...');
+            console.log('GeminiProvider.validateApiKey: Using model:', this.config.model);
+            
             const testMessage: GeminiMessage = {
                 role: 'user',
                 parts: [{ text: 'Hello' }]
             };
 
-            await this.generateContent([testMessage]);
+            console.log('GeminiProvider.validateApiKey: Sending test message...');
+            const result = await this.generateContent([testMessage]);
+            console.log('GeminiProvider.validateApiKey: Test successful, result length:', result.length);
             return true;
         } catch (error) {
+            console.error('GeminiProvider.validateApiKey: Validation failed:', error);
             return false;
         }
     }

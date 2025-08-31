@@ -159,6 +159,24 @@ export const AI_MODELS: AIModel[] = [
         version: 'Version: gemini-1.5-flash-latest'
     },
     
+    // Google Models - Generation 2.0
+    {
+        id: 'gemini-2.0-flash',
+        name: 'Gemini 2.0 Flash',
+        provider: 'google',
+        description: 'Fast and efficient Gemini 2.0 model',
+        contextWindow: '1M context window',
+        version: 'Version: gemini-2.0-flash'
+    },
+    {
+        id: 'gemini-2.0-pro',
+        name: 'Gemini 2.0 Pro',
+        provider: 'google',
+        description: 'Advanced Gemini 2.0 model for complex tasks',
+        contextWindow: '2M context window',
+        version: 'Version: gemini-2.0-pro'
+    },
+    
     // Google Models - Generation 2.5 (newest)
     {
         id: 'gemini-2.5-pro',

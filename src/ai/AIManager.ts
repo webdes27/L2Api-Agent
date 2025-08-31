@@ -38,9 +38,22 @@ export class AIManager {
     private currentProvider: AIProvider | null = null;
     private conversationHistory: AIMessage[] = [];
     private projectContext: Map<string, any> = new Map();
+    private logCallback?: (message: string) => void;
+
+    public setLogCallback(callback: (message: string) => void): void {
+        this.logCallback = callback;
+    }
+
+    private log(message: string): void {
+        console.log(`AIManager: ${message}`);
+        if (this.logCallback) {
+            this.logCallback(`AIManager: ${message}`);
+        }
+    }
 
     constructor() {
         this.initializeProviders();
+        this.loadSavedProvider();
     }
 
     private initializeProviders(): void {
@@ -51,6 +64,38 @@ export class AIManager {
         this.providers.set('local', new LocalModelProvider());
     }
 
+    private loadSavedProvider(): void {
+        try {
+            // For now, we'll load the provider from the renderer process
+            // This will be handled by the renderer process calling getCurrentProvider
+            this.log('loadSavedProvider called');
+        } catch (error) {
+            console.error('Failed to load saved provider:', error);
+        }
+    }
+
+    public async loadProviderById(providerId: string): Promise<boolean> {
+        this.log(`loadProviderById called with: ${providerId}`);
+        
+        const provider = this.providers.get(providerId);
+        if (!provider) {
+            this.log(`loadProviderById: Provider not found: ${providerId}`);
+            return false;
+        }
+
+        this.log(`loadProviderById: Found provider: ${provider.getName()}`);
+        this.log(`loadProviderById: Provider isConfigured: ${provider.isConfigured()}`);
+        
+        if (provider.isConfigured()) {
+            this.currentProvider = provider;
+            this.log(`loadProviderById: Set currentProvider to: ${provider.getName()}`);
+            return true;
+        } else {
+            this.log(`loadProviderById: Provider ${providerId} is not configured`);
+            return false;
+        }
+    }
+
     public getAvailableProviders(): Array<{id: string, name: string, isConfigured: boolean}> {
         return Array.from(this.providers.entries()).map(([id, provider]) => ({
             id,
@@ -59,18 +104,55 @@ export class AIManager {
         }));
     }
 
+    public getCurrentProvider(): string | null {
+        this.log('getCurrentProvider called');
+        this.log(`this.currentProvider: ${this.currentProvider ? this.currentProvider.getName() : 'null'}`);
+        
+        if (!this.currentProvider) {
+            this.log('No current provider set, returning null');
+            return null;
+        }
+        
+        // Find the provider ID by comparing the provider instance
+        for (const [id, provider] of this.providers.entries()) {
+            if (provider === this.currentProvider) {
+                this.log(`Found current provider ID: ${id}`);
+                return id;
+            }
+        }
+        
+        this.log('Current provider not found in providers map, returning null');
+        return null;
+    }
+
     public async setProvider(providerId: string, config: any): Promise<boolean> {
+        this.log(`setProvider called with: ${providerId}, config keys: ${Object.keys(config).join(', ')}, has apiKey: ${!!config.apiKey}`);
+        
         const provider = this.providers.get(providerId);
         if (!provider) {
+            this.log(`setProvider: Provider not found: ${providerId}`);
             throw new Error(`Provider ${providerId} not found`);
         }
 
+        this.log(`setProvider: Found provider: ${provider.getName()}`);
+        this.log(`setProvider: Provider isConfigured before configure: ${provider.isConfigured()}`);
+
         try {
+            this.log('setProvider: Calling provider.configure...');
             await provider.configure(config);
+            this.log('setProvider: Provider configured successfully');
+            this.log(`setProvider: Provider isConfigured after configure: ${provider.isConfigured()}`);
+            
             this.currentProvider = provider;
+            this.log(`setProvider: Set currentProvider to: ${provider.getName()}`);
+            
+            // Save the provider ID (will be handled by renderer process)
+            this.log(`Provider configured successfully: ${providerId}`);
+            
             return true;
         } catch (error) {
-            console.error(`Failed to configure provider ${providerId}:`, error);
+            this.log(`setProvider: Failed to configure provider ${providerId}: ${error}`);
+            this.log(`setProvider: Error details: ${error instanceof Error ? error.message : 'Unknown error'}`);
             return false;
         }
     }

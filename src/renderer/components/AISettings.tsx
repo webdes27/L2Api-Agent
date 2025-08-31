@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { AI_MODELS, getModelsByProvider } from '../types/AIModels';
 
+interface ErrorDialogProps {
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onClose: () => void;
+}
+
+
+
 interface AIProvider {
     id: string;
     name: string;
@@ -13,10 +22,110 @@ interface AISettingsProps {
 }
 
 const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) => {
+    // ErrorDialog component
+    const ErrorDialog: React.FC<ErrorDialogProps> = ({ isOpen, title, message, onClose: onDialogClose }) => {
+        if (!isOpen) return null;
+
+        return (
+            <div className="modal-overlay" style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10000
+            }}>
+                <div className="modal-content" style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    padding: '20px',
+                    maxWidth: '400px',
+                    width: '90%',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+                }}>
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '15px'
+                    }}>
+                        <h3 style={{
+                            margin: 0,
+                            color: 'var(--text-primary)',
+                            fontSize: '16px',
+                            fontWeight: '600'
+                        }}>
+                            {title}
+                        </h3>
+                        <button
+                            onClick={onDialogClose}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--text-secondary)',
+                                fontSize: '18px',
+                                cursor: 'pointer',
+                                padding: '0',
+                                width: '24px',
+                                height: '24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            ×
+                        </button>
+                    </div>
+                    <p style={{
+                        margin: '0 0 20px 0',
+                        color: 'var(--text-primary)',
+                        fontSize: '14px',
+                        lineHeight: '1.5'
+                    }}>
+                        {message}
+                    </p>
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end'
+                    }}>
+                        <button
+                            onClick={onDialogClose}
+                            style={{
+                                backgroundColor: 'var(--accent-color)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                padding: '8px 16px',
+                                fontSize: '14px',
+                                cursor: 'pointer',
+                                fontWeight: '500'
+                            }}
+                        >
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
     const [providers, setProviders] = useState<AIProvider[]>([]);
     const [selectedProvider, setSelectedProvider] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [errorDialog, setErrorDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+    }>({
+        isOpen: false,
+        title: '',
+        message: ''
+    });
     
     // Provider configurations
     const [openAIConfig, setOpenAIConfig] = useState({
@@ -55,13 +164,17 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
     }, []);
 
     const loadProviders = async () => {
+        console.log('AISettings: loadProviders called');
         try {
             const providerList = await window.electronAPI.ai.getProviders();
+            console.log('AISettings: providerList:', providerList);
             setProviders(providerList);
             
             // Set first configured provider as selected
             const configured = providerList.find((p: any) => p.isConfigured);
+            console.log('AISettings: configured provider:', configured);
             if (configured) {
+                console.log('AISettings: Setting selectedProvider to:', configured.id);
                 setSelectedProvider(configured.id);
             }
         } catch (error) {
@@ -72,29 +185,36 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
     };
 
     const loadSavedConfigurations = () => {
+        console.log('AISettings: loadSavedConfigurations called');
         // Load from localStorage or electron-store
         const savedOpenAI = localStorage.getItem('ai-config-openai');
+        console.log('AISettings: savedOpenAI:', savedOpenAI ? 'exists' : 'not found');
         if (savedOpenAI) {
             setOpenAIConfig(JSON.parse(savedOpenAI));
         }
 
         const savedAnthropic = localStorage.getItem('ai-config-anthropic');
+        console.log('AISettings: savedAnthropic:', savedAnthropic ? 'exists' : 'not found');
         if (savedAnthropic) {
             setAnthropicConfig(JSON.parse(savedAnthropic));
         }
 
         const savedGoogle = localStorage.getItem('ai-config-google');
+        console.log('AISettings: savedGoogle:', savedGoogle ? 'exists' : 'not found');
         if (savedGoogle) {
             setGoogleConfig(JSON.parse(savedGoogle));
         }
 
         const savedLocal = localStorage.getItem('ai-config-local');
+        console.log('AISettings: savedLocal:', savedLocal ? 'exists' : 'not found');
         if (savedLocal) {
             setLocalConfig(JSON.parse(savedLocal));
         }
     };
 
     const saveConfiguration = async () => {
+        console.log('AISettings: saveConfiguration called');
+        console.log('AISettings: selectedProvider:', selectedProvider);
         setIsSaving(true);
         
         try {
@@ -119,24 +239,47 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
                     break;
             }
 
+            console.log('AISettings: About to call setProvider with:', { selectedProvider, config: { ...config, apiKey: config.apiKey ? '***' : 'undefined' } });
             const success = await window.electronAPI.ai.setProvider(selectedProvider, config);
+            console.log('AISettings: setProvider returned:', success);
             
             if (success) {
+                // Сохраняем ID текущего провайдера в localStorage
+                localStorage.setItem('ai-current-provider', selectedProvider);
+                console.log('AISettings: Saved current provider to localStorage:', selectedProvider);
+                
                 onProviderChange(selectedProvider);
-                alert('Конфигурация сохранена успешно!');
-                onClose();
+                setErrorDialog({
+                    isOpen: true,
+                    title: 'Успех',
+                    message: 'Конфигурация сохранена успешно!'
+                });
+                setTimeout(() => {
+                    setErrorDialog({ isOpen: false, title: '', message: '' });
+                    onClose();
+                }, 1500);
             } else {
-                alert('Ошибка при сохранении конфигурации. Проверьте настройки.');
+                setErrorDialog({
+                    isOpen: true,
+                    title: 'Ошибка сохранения',
+                    message: 'Ошибка при сохранении конфигурации. Проверьте настройки.'
+                });
             }
         } catch (error) {
             console.error('Failed to save configuration:', error);
-            alert('Ошибка при сохранении конфигурации.');
+            setErrorDialog({
+                isOpen: true,
+                title: 'Ошибка сохранения',
+                message: 'Ошибка при сохранении конфигурации.'
+            });
         } finally {
             setIsSaving(false);
         }
     };
 
     const testConnection = async () => {
+        console.log('AISettings: testConnection called');
+        console.log('AISettings: selectedProvider:', selectedProvider);
         try {
             let config: any = {};
             
@@ -147,21 +290,38 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
                 case 'anthropic':
                     config = anthropicConfig;
                     break;
+                case 'google':
+                    config = googleConfig;
+                    break;
                 case 'local':
                     config = localConfig;
                     break;
             }
 
+            console.log('AISettings: About to call setProvider for test with:', { selectedProvider, config: { ...config, apiKey: config.apiKey ? '***' : 'undefined' } });
             const success = await window.electronAPI.ai.setProvider(selectedProvider, config);
+            console.log('AISettings: testConnection setProvider returned:', success);
             
             if (success) {
-                alert('Подключение успешно!');
+                setErrorDialog({
+                    isOpen: true,
+                    title: 'Успех',
+                    message: 'Подключение успешно!'
+                });
             } else {
-                alert('Ошибка подключения. Проверьте настройки.');
+                setErrorDialog({
+                    isOpen: true,
+                    title: 'Ошибка подключения',
+                    message: 'Ошибка подключения. Проверьте настройки.'
+                });
             }
         } catch (error) {
             console.error('Connection test failed:', error);
-            alert('Ошибка при тестировании подключения.');
+            setErrorDialog({
+                isOpen: true,
+                title: 'Ошибка подключения',
+                message: 'Ошибка при тестировании подключения.'
+            });
         }
     };
 
@@ -445,54 +605,63 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
     }
 
     return (
-        <div className="ai-settings-panel">
-            <div className="modal-header">
-                <h2 className="modal-title">AI Settings</h2>
-                <button className="modal-close" onClick={onClose}>×</button>
+        <>
+            <div className="ai-settings-panel">
+                <div className="modal-header">
+                    <h2 className="modal-title">AI Settings</h2>
+                    <button className="modal-close" onClick={onClose}>×</button>
+                </div>
+                
+                <div className="modal-content">
+                    <div className="form-group">
+                        <label className="form-label">AI Provider</label>
+                        <select
+                            className="form-select"
+                            value={selectedProvider}
+                            onChange={(e) => setSelectedProvider(e.target.value)}
+                        >
+                            <option value="">Выберите провайдера</option>
+                            {providers.map(provider => (
+                                <option key={provider.id} value={provider.id}>
+                                    {provider.name} {provider.isConfigured ? '✓' : ''}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {selectedProvider && renderProviderConfig()}
+
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '12px', 
+                        marginTop: '24px',
+                        justifyContent: 'flex-end'
+                    }}>
+                        <button 
+                            className="button" 
+                            onClick={testConnection}
+                            disabled={!selectedProvider || isSaving}
+                        >
+                            Тест соединения
+                        </button>
+                        <button 
+                            className="button primary" 
+                            onClick={saveConfiguration}
+                            disabled={!selectedProvider || isSaving}
+                        >
+                            {isSaving ? 'Сохранение...' : 'Сохранить'}
+                        </button>
+                    </div>
+                </div>
             </div>
             
-            <div className="modal-content">
-                <div className="form-group">
-                    <label className="form-label">AI Provider</label>
-                    <select
-                        className="form-select"
-                        value={selectedProvider}
-                        onChange={(e) => setSelectedProvider(e.target.value)}
-                    >
-                        <option value="">Выберите провайдера</option>
-                        {providers.map(provider => (
-                            <option key={provider.id} value={provider.id}>
-                                {provider.name} {provider.isConfigured ? '✓' : ''}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {selectedProvider && renderProviderConfig()}
-
-                <div style={{ 
-                    display: 'flex', 
-                    gap: '12px', 
-                    marginTop: '24px',
-                    justifyContent: 'flex-end'
-                }}>
-                    <button 
-                        className="button" 
-                        onClick={testConnection}
-                        disabled={!selectedProvider || isSaving}
-                    >
-                        Тест соединения
-                    </button>
-                    <button 
-                        className="button primary" 
-                        onClick={saveConfiguration}
-                        disabled={!selectedProvider || isSaving}
-                    >
-                        {isSaving ? 'Сохранение...' : 'Сохранить'}
-                    </button>
-                </div>
-            </div>
-        </div>
+            <ErrorDialog
+                isOpen={errorDialog.isOpen}
+                title={errorDialog.title}
+                message={errorDialog.message}
+                onClose={() => setErrorDialog({ isOpen: false, title: '', message: '' })}
+            />
+        </>
     );
 };
 

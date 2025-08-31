@@ -24,15 +24,22 @@ const StatusBar: React.FC<StatusBarProps> = ({ currentProject, activeFile, aiPro
     };
 
     const getAIStatus = () => {
-        if (!aiProvider) return 'No AI';
+        console.log('StatusBar: aiProvider value is:', aiProvider);
+        if (!aiProvider) {
+            console.log('StatusBar: No AI provider, returning "No AI"');
+            return 'No AI';
+        }
         
         const providerNames: { [key: string]: string } = {
             openai: 'OpenAI',
             anthropic: 'Claude',
+            google: 'Gemini',
             local: 'Local AI'
         };
         
-        return providerNames[aiProvider] || aiProvider;
+        const result = providerNames[aiProvider] || aiProvider;
+        console.log('StatusBar: Returning AI status:', result);
+        return result;
     };
 
     return (

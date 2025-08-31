@@ -14,6 +14,11 @@ export class GeminiAIProvider implements AIProvider {
     }
 
     async configure(config: AIProviderConfig): Promise<void> {
+        console.log('GeminiAIProvider.configure called with config:', {
+            ...config,
+            apiKey: config.apiKey ? `${config.apiKey.substring(0, 10)}...` : 'undefined'
+        });
+
         if (!config.apiKey) {
             throw new Error('API key is required for Gemini');
         }
@@ -27,17 +32,11 @@ export class GeminiAIProvider implements AIProvider {
             topK: config.topK || 40
         };
 
-        this.geminiProvider = new GeminiProvider(this.config);
+        console.log('GeminiAIProvider: Created config with model:', this.config.model);
 
-        // Test the configuration
-        try {
-            const isValid = await this.geminiProvider.validateApiKey();
-            if (!isValid) {
-                throw new Error('Invalid Gemini API key');
-            }
-        } catch (error) {
-            throw new Error(`Failed to configure Gemini: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        this.geminiProvider = new GeminiProvider(this.config);
+        
+        console.log('GeminiAIProvider: Configuration completed successfully');
     }
 
     async sendMessage(messages: AIMessage[], context?: any): Promise<AIResponse> {
