@@ -31,6 +31,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
                 throw error;
             });
         },
+        testConnection: () => {
+            console.log('Preload: testConnection called');
+            return ipcRenderer.invoke('ai:test-connection').then((result) => {
+                console.log('Preload: testConnection result:', result);
+                return result;
+            }).catch((error) => {
+                console.error('Preload: testConnection error:', error);
+                throw error;
+            });
+        },
         showChat: () => ipcRenderer.invoke('ai:show-chat'),
         showSettings: () => ipcRenderer.invoke('ai:show-settings')
     },
@@ -99,6 +109,7 @@ declare global {
                 getCurrentProvider: () => Promise<string | null>;
                 loadProvider: (providerId: string) => Promise<boolean>;
                 setProvider: (providerId: string, config: any) => Promise<boolean>;
+                testConnection: () => Promise<boolean>;
                 showChat: () => Promise<boolean>;
                 showSettings: () => Promise<boolean>;
             };
