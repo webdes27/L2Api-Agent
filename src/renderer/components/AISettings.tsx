@@ -159,7 +159,8 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
     });
 
     const [g4fConfig, setG4fConfig] = useState({
-        serverUrl: 'http://localhost:1337',
+        serverUrl: 'http://localhost:8080',
+        apiKey: '',
         model: 'gpt-3.5-turbo',
         temperature: 0.7,
         maxTokens: 2048,
@@ -335,16 +336,38 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
             console.log('AISettings: testConnection setProvider returned:', success);
             
             if (success) {
-                setErrorDialog({
-                    isOpen: true,
-                    title: 'Успех',
-                    message: 'Подключение успешно!'
-                });
+                // Теперь реально тестируем подключение
+                try {
+                    // @ts-ignore - testConnection method exists but TypeScript doesn't see it
+                    const testResult = await window.electronAPI.ai.testConnection();
+                    console.log('AISettings: testConnection result:', testResult);
+                    
+                    if (testResult) {
+                        setErrorDialog({
+                            isOpen: true,
+                            title: 'Успех',
+                            message: 'Подключение успешно! Сервер доступен и отвечает.'
+                        });
+                    } else {
+                        setErrorDialog({
+                            isOpen: true,
+                            title: 'Ошибка подключения',
+                            message: 'Сервер недоступен. Проверьте URL и убедитесь, что сервер запущен.'
+                        });
+                    }
+                } catch (testError) {
+                    console.error('AISettings: Connection test failed:', testError);
+                    setErrorDialog({
+                        isOpen: true,
+                        title: 'Ошибка подключения',
+                        message: `Ошибка при тестировании: ${testError instanceof Error ? testError.message : 'Неизвестная ошибка'}`
+                    });
+                }
             } else {
                 setErrorDialog({
                     isOpen: true,
-                    title: 'Ошибка подключения',
-                    message: 'Ошибка подключения. Проверьте настройки.'
+                    title: 'Ошибка конфигурации',
+                    message: 'Не удалось настроить провайдера. Проверьте параметры.'
                 });
             }
         } catch (error) {
@@ -616,16 +639,57 @@ const AISettings: React.FC<AISettingsProps> = ({ onClose, onProviderChange }) =>
                 return (
                     <div>
                         <div className="form-group">
-                            <label className="form-label">Server URL</label>
+                            <label className="form-label">API Key</label>
                             <input
-                                type="text"
-                                className="form-input"
-                                value={g4fConfig.serverUrl}
-                                onChange={(e) => setG4fConfig(prev => ({ ...prev, serverUrl: e.target.value }))}
-                                placeholder="http://localhost:1337"
-                            />
+                            type="password"
+                            className="form-input"
+                            value={g4fConfig.apiKey}
+                            onChange={(e) => setG4fConfig(prev => ({ ...prev, apiKey: e.target.value }))}
+                            placeholder="Введите ваш API ключ"
+                        />
                             <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
-                                URL вашего GPT4Free сервера
+                                API ключ для аутентификации на G4F сервере
+                            </small>
+                        </div>
+                        
+                        <div className="form-group">
+                            <label className="form-label">Server URL</label>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={g4fConfig.serverUrl}
+                                    onChange={(e) => setG4fConfig(prev => ({ ...prev, serverUrl: e.target.value }))}
+                                    placeholder="http://localhost:8080"
+                                    style={{ flex: 1 }}
+                                />
+                                <button
+                                    type="button"
+                                    className="button"
+                                    onClick={() => setG4fConfig(prev => ({ ...prev, serverUrl: 'http://localhost:8000' }))}
+                                    style={{ fontSize: '12px', padding: '4px 8px' }}
+                                >
+                                    8000
+                                </button>
+                                <button
+                                    type="button"
+                                    className="button"
+                                    onClick={() => setG4fConfig(prev => ({ ...prev, serverUrl: 'http://localhost:8080' }))}
+                                    style={{ fontSize: '12px', padding: '4px 8px' }}
+                                >
+                                    8080
+                                </button>
+                                <button
+                                    type="button"
+                                    className="button"
+                                    onClick={() => setG4fConfig(prev => ({ ...prev, serverUrl: 'http://127.0.0.1:8080' }))}
+                                    style={{ fontSize: '12px', padding: '4px 8px' }}
+                                >
+                                    127.0.0.1
+                                </button>
+                            </div>
+                            <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                URL вашего GPT4Free сервера. По умолчанию используется порт 8080.
                             </small>
                         </div>
                         
