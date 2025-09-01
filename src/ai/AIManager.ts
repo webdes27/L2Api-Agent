@@ -16,6 +16,7 @@ export interface CodeContext {
     recentFiles?: string[];
     gitStatus?: string;
     taskType?: 'chat' | 'code_completion' | 'code_review' | 'refactor' | 'explain' | 'debug' | 'test_generation' | 'improvements';
+    selectedModel?: string; // Добавляем выбранную модель
 }
 
 export interface CodeAnalysis {

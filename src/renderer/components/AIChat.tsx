@@ -134,7 +134,8 @@ const AIChat: React.FC<AIChatProps> = ({
                 filePath: currentFile,
                 selectedCode,
                 projectPath,
-                taskType: 'chat'
+                taskType: 'chat',
+                selectedModel: selectedModel // Добавляем выбранную модель в контекст
             });
 
             // Simulate typing effect

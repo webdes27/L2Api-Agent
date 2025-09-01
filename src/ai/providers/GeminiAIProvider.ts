@@ -45,6 +45,10 @@ export class GeminiAIProvider implements AIProvider {
         }
 
         try {
+            // Используем модель из контекста, если она указана, иначе используем модель из конфигурации
+            const modelToUse = context?.selectedModel || this.config.model;
+            console.log('GeminiAIProvider.sendMessage: Using model:', modelToUse);
+
             // Convert AIMessage[] to GeminiMessage[]
             const geminiMessages: GeminiMessage[] = messages
                 .filter(msg => msg.role !== 'system') // Gemini doesn't have system role
@@ -79,17 +83,26 @@ export class GeminiAIProvider implements AIProvider {
                 }
             }
 
-            const response = await this.geminiProvider.generateContent(geminiMessages, systemPrompt);
+            // Создаем временную конфигурацию с выбранной моделью
+            const originalModel = this.config.model;
+            this.config.model = modelToUse;
 
-            return {
-                content: response,
-                model: this.config.model,
-                finishReason: 'stop',
-                metadata: {
-                    provider: 'gemini',
-                    timestamp: Date.now()
-                }
-            };
+            try {
+                const response = await this.geminiProvider.generateContent(geminiMessages, systemPrompt);
+
+                return {
+                    content: response,
+                    model: modelToUse,
+                    finishReason: 'stop',
+                    metadata: {
+                        provider: 'gemini',
+                        timestamp: Date.now()
+                    }
+                };
+            } finally {
+                // Восстанавливаем оригинальную модель
+                this.config.model = originalModel;
+            }
 
         } catch (error) {
             console.error('Gemini request failed:', error);
@@ -103,6 +116,10 @@ export class GeminiAIProvider implements AIProvider {
         }
 
         try {
+            // Используем модель из контекста, если она указана, иначе используем модель из конфигурации
+            const modelToUse = context?.selectedModel || this.config.model;
+            console.log('GeminiAIProvider.sendMessageWithImage: Using model:', modelToUse);
+
             // Get the last user message
             const lastUserMessage = messages.filter(msg => msg.role === 'user').pop();
             if (!lastUserMessage) {
@@ -127,23 +144,32 @@ export class GeminiAIProvider implements AIProvider {
                 ? systemMessages.map(msg => msg.content).join('\n\n')
                 : undefined;
 
-            const response = await this.geminiProvider.generateContentWithImage(
-                prompt,
-                imageData,
-                mimeType,
-                systemPrompt
-            );
+            // Создаем временную конфигурацию с выбранной моделью
+            const originalModel = this.config.model;
+            this.config.model = modelToUse;
 
-            return {
-                content: response,
-                model: this.config.model,
-                finishReason: 'stop',
-                metadata: {
-                    provider: 'gemini',
-                    timestamp: Date.now(),
-                    hasImage: true
-                }
-            };
+            try {
+                const response = await this.geminiProvider.generateContentWithImage(
+                    prompt,
+                    imageData,
+                    mimeType,
+                    systemPrompt
+                );
+
+                return {
+                    content: response,
+                    model: modelToUse,
+                    finishReason: 'stop',
+                    metadata: {
+                        provider: 'gemini',
+                        timestamp: Date.now(),
+                        hasImage: true
+                    }
+                };
+            } finally {
+                // Восстанавливаем оригинальную модель
+                this.config.model = originalModel;
+            }
 
         } catch (error) {
             console.error('Gemini image request failed:', error);

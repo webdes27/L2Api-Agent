@@ -57,6 +57,11 @@ export class G4FAIProvider implements AIProvider {
         try {
             console.log('G4FAIProvider.sendMessage: Sending messages...');
             console.log('G4FAIProvider.sendMessage: Messages count:', messages.length);
+            console.log('G4FAIProvider.sendMessage: Context:', context);
+
+            // Используем модель из контекста, если она указана, иначе используем модель из конфигурации
+            const modelToUse = context?.selectedModel || this.g4fProvider.getConfig().model;
+            console.log('G4FAIProvider.sendMessage: Using model:', modelToUse);
 
             // Конвертируем AIMessage в G4FMessage
             const g4fMessages: G4FMessage[] = messages.map(msg => ({
@@ -64,13 +69,25 @@ export class G4FAIProvider implements AIProvider {
                 content: msg.content
             }));
 
-            const response = await this.g4fProvider.generateContent(g4fMessages);
-            console.log('G4FAIProvider.sendMessage: Response received, length:', response.length);
+            // Создаем временную конфигурацию с выбранной моделью
+            const tempConfig = this.g4fProvider.getConfig();
+            const originalModel = tempConfig.model;
             
-            return {
-                content: response,
-                model: this.g4fProvider.getConfig().model
-            };
+            // Временно изменяем модель в провайдере
+            this.g4fProvider.updateConfig({ model: modelToUse });
+
+            try {
+                const response = await this.g4fProvider.generateContent(g4fMessages);
+                console.log('G4FAIProvider.sendMessage: Response received, length:', response.length);
+                
+                return {
+                    content: response,
+                    model: modelToUse
+                };
+            } finally {
+                // Восстанавливаем оригинальную модель
+                this.g4fProvider.updateConfig({ model: originalModel });
+            }
 
         } catch (error) {
             console.error('G4FAIProvider.sendMessage: Failed to send message:', error);
