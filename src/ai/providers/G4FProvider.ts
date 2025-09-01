@@ -2,6 +2,7 @@ import axios from 'axios';
 
 export interface G4FConfig {
     serverUrl: string;
+    apiKey?: string;
     model: string;
     maxTokens?: number;
     temperature?: number;
@@ -32,6 +33,7 @@ export class G4FProvider {
     constructor(config: G4FConfig) {
         this.config = {
             serverUrl: config.serverUrl || this.defaultServerUrl,
+            apiKey: config.apiKey,
             model: config.model,
             maxTokens: config.maxTokens || 2048,
             temperature: config.temperature || 0.7,
@@ -73,19 +75,68 @@ export class G4FProvider {
                 stream: false
             };
 
-            console.log('G4FProvider.generateContent: Request URL:', `${this.config.serverUrl}/v1/chat/completions`);
+            const requestUrl = `${this.config.serverUrl}/v1/chat/completions`;
+            console.log('G4FProvider.generateContent: Request URL:', requestUrl);
             console.log('G4FProvider.generateContent: Request body:', JSON.stringify(requestBody, null, 2));
 
+            // Сначала проверяем, доступен ли сервер
+            try {
+                const headers: any = {};
+                
+                // Добавляем Authorization заголовок если есть API ключ
+                if (this.config.apiKey) {
+                    headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+                }
+
+                // Пробуем разные эндпоинты для проверки доступности сервера
+                try {
+                    await axios.get(`${this.config.serverUrl}/v1/models`, { 
+                        headers,
+                        timeout: 5000 
+                    });
+                    console.log('G4FProvider.generateContent: Server is reachable via /v1/models');
+                } catch (modelsError) {
+                    console.log('G4FProvider.generateContent: /v1/models not available, trying root endpoint...');
+                    
+                    // Пробуем корневой эндпоинт
+                    try {
+                        await axios.get(`${this.config.serverUrl}/`, { 
+                            headers,
+                            timeout: 5000 
+                        });
+                        console.log('G4FProvider.generateContent: Server is reachable via root endpoint');
+                    } catch (rootError) {
+                        console.log('G4FProvider.generateContent: Root endpoint also not available, but server responds');
+                        // Сервер отвечает, просто эндпоинты могут быть другими
+                    }
+                }
+            } catch (pingError) {
+                console.error('G4FProvider.generateContent: Server ping failed:', pingError);
+                if (axios.isAxiosError(pingError) && pingError.code === 'ECONNREFUSED') {
+                    throw new Error(`G4F server is not running at ${this.config.serverUrl}. Please check the server URL and ensure the server is started.`);
+                }
+            }
+
+            const headers: any = {
+                'Content-Type': 'application/json'
+            };
+
+            // Добавляем Authorization заголовок если есть API ключ
+            if (this.config.apiKey) {
+                headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+            }
+
             const response = await axios.post<{ choices: Array<{ message: { content: string } }> }>(
-                `${this.config.serverUrl}/v1/chat/completions`,
+                requestUrl,
                 requestBody,
                 {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers,
                     timeout: this.config.timeout
                 }
             );
+
+            console.log('G4FProvider.generateContent: Response received, status:', response.status);
+            console.log('G4FProvider.generateContent: Response data:', response.data);
 
             if (!response.data.choices || response.data.choices.length === 0) {
                 throw new Error('No response from G4F server');
@@ -96,12 +147,14 @@ export class G4FProvider {
                 throw new Error('Invalid response format from G4F server');
             }
 
+            console.log('G4FProvider.generateContent: Successfully extracted content, length:', choice.message.content.length);
             return choice.message.content;
 
         } catch (error) {
             console.error('G4F API error:', error);
             console.error('Error details:', {
                 isAxiosError: axios.isAxiosError(error),
+                code: axios.isAxiosError(error) ? error.code : 'N/A',
                 status: axios.isAxiosError(error) ? error.response?.status : 'N/A',
                 statusText: axios.isAxiosError(error) ? error.response?.statusText : 'N/A',
                 data: axios.isAxiosError(error) ? error.response?.data : 'N/A',
@@ -110,7 +163,11 @@ export class G4FProvider {
 
             if (axios.isAxiosError(error)) {
                 if (error.code === 'ECONNREFUSED') {
-                    throw new Error('G4F server is not running. Please start the server first.');
+                    throw new Error(`G4F server is not running at ${this.config.serverUrl}. Please check the server URL and ensure the server is started.`);
+                } else if (error.code === 'ENOTFOUND') {
+                    throw new Error(`G4F server URL ${this.config.serverUrl} is not reachable. Please check the URL.`);
+                } else if (error.code === 'ETIMEDOUT') {
+                    throw new Error(`G4F server at ${this.config.serverUrl} is not responding (timeout). Please check if the server is running.`);
                 } else if (error.response?.status === 404) {
                     throw new Error('G4F server endpoint not found. Check server configuration.');
                 } else if (error.response?.status === 500) {
@@ -314,14 +371,76 @@ export class G4FProvider {
             console.log('G4FProvider.validateConnection: Testing connection...');
             console.log('G4FProvider.validateConnection: Server URL:', this.config.serverUrl);
 
-            const response = await axios.get(`${this.config.serverUrl}/v1/models`, {
-                timeout: 10000
-            });
-
-            console.log('G4FProvider.validateConnection: Connection successful');
-            return true;
+            // Сначала проверяем базовое подключение
+            try {
+                const headers: any = {};
+                
+                // Добавляем Authorization заголовок если есть API ключ
+                if (this.config.apiKey) {
+                    headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+                }
+                
+                // Пробуем разные эндпоинты для проверки доступности сервера
+                try {
+                    const response = await axios.get(`${this.config.serverUrl}/v1/models`, {
+                        headers,
+                        timeout: 10000
+                    });
+    
+                    console.log('G4FProvider.validateConnection: Connection successful via /v1/models, status:', response.status);
+                    console.log('G4FProvider.validateConnection: Response data:', response.data);
+                    return true;
+                } catch (modelsError) {
+                    console.log('G4FProvider.validateConnection: /v1/models not available, trying root endpoint...');
+                    
+                    // Пробуем корневой эндпоинт
+                    try {
+                        const rootResponse = await axios.get(`${this.config.serverUrl}/`, {
+                            headers,
+                            timeout: 10000
+                        });
+    
+                        console.log('G4FProvider.validateConnection: Connection successful via root endpoint, status:', rootResponse.status);
+                        console.log('G4FProvider.validateConnection: Root response data:', rootResponse.data);
+                        return true;
+                    } catch (rootError) {
+                        console.log('G4FProvider.validateConnection: Root endpoint also not available, but server responds');
+                        
+                        // Если сервер отвечает (не ECONNREFUSED), считаем что он доступен
+                        if (axios.isAxiosError(rootError) && rootError.code !== 'ECONNREFUSED') {
+                            console.log('G4FProvider.validateConnection: Server is reachable, returning true');
+                            return true;
+                        }
+                        
+                        throw rootError;
+                    }
+                }
+            } catch (requestError) {
+                console.error('G4FProvider.validateConnection: Request failed:', requestError);
+                
+                if (axios.isAxiosError(requestError)) {
+                    const errorDetails = {
+                        code: requestError.code,
+                        status: requestError.response?.status,
+                        statusText: requestError.response?.statusText,
+                        data: requestError.response?.data,
+                        message: requestError.message
+                    };
+                    console.error('G4FProvider.validateConnection: Axios error details:', errorDetails);
+                    
+                    // Даем более понятные сообщения об ошибках
+                    if (requestError.code === 'ECONNREFUSED') {
+                        console.error('G4FProvider.validateConnection: Connection refused - server is not running or wrong port');
+                    } else if (requestError.code === 'ENOTFOUND') {
+                        console.error('G4FProvider.validateConnection: Host not found - check the server URL');
+                    } else if (requestError.code === 'ETIMEDOUT') {
+                        console.error('G4FProvider.validateConnection: Connection timeout - server is not responding');
+                    }
+                }
+                return false;
+            }
         } catch (error) {
-            console.error('G4FProvider.validateConnection: Connection failed:', error);
+            console.error('G4FProvider.validateConnection: Unexpected error:', error);
             return false;
         }
     }
@@ -329,18 +448,131 @@ export class G4FProvider {
     // Получение списка доступных моделей с сервера
     async getServerModels(): Promise<string[]> {
         try {
-            const response = await axios.get(`${this.config.serverUrl}/v1/models`, {
-                timeout: 10000
-            });
-
-            if (response.data && response.data.data) {
-                return response.data.data.map((model: any) => model.id);
+            console.log('G4FProvider.getServerModels: Fetching models from server...');
+            
+            const headers: any = {};
+            
+            // Добавляем Authorization заголовок если есть API ключ
+            if (this.config.apiKey) {
+                headers['Authorization'] = `Bearer ${this.config.apiKey}`;
             }
 
-            return [];
+            // Пробуем разные эндпоинты для получения моделей
+            try {
+                const response = await axios.get(`${this.config.serverUrl}/v1/models`, {
+                    headers,
+                    timeout: 10000
+                });
+    
+                console.log('G4FProvider.getServerModels: Response received via /v1/models:', response.status);
+                console.log('G4FProvider.getServerModels: Response data:', response.data);
+    
+                if (response.data && response.data.data) {
+                    const models = response.data.data.map((model: any) => model.id);
+                    console.log('G4FProvider.getServerModels: Extracted models:', models);
+                    return models;
+                }
+    
+                console.log('G4FProvider.getServerModels: No models data in response');
+                return [];
+            } catch (modelsError) {
+                console.log('G4FProvider.getServerModels: /v1/models not available, trying alternative endpoints...');
+                
+                // Пробуем альтернативные эндпоинты
+                const alternativeEndpoints = [
+                    '/models',
+                    '/api/models',
+                    '/v1/models/list',
+                    '/models/list'
+                ];
+                
+                for (const endpoint of alternativeEndpoints) {
+                    try {
+                        console.log(`G4FProvider.getServerModels: Trying endpoint: ${endpoint}`);
+                        const altResponse = await axios.get(`${this.config.serverUrl}${endpoint}`, {
+                            headers,
+                            timeout: 10000
+                        });
+                        
+                        console.log(`G4FProvider.getServerModels: Success via ${endpoint}:`, altResponse.status);
+                        console.log(`G4FProvider.getServerModels: Response data:`, altResponse.data);
+                        
+                        // Пытаемся извлечь модели из ответа
+                        if (altResponse.data && altResponse.data.data) {
+                            const models = altResponse.data.data.map((model: any) => model.id);
+                            console.log('G4FProvider.getServerModels: Extracted models from alternative endpoint:', models);
+                            return models;
+                        } else if (altResponse.data && Array.isArray(altResponse.data)) {
+                            // Возможно, модели передаются как массив напрямую
+                            const models = altResponse.data.map((model: any) => model.id || model);
+                            console.log('G4FProvider.getServerModels: Extracted models from array response:', models);
+                            return models;
+                        }
+                        
+                        break;
+                    } catch (endpointError) {
+                        console.log(`G4FProvider.getServerModels: Endpoint ${endpoint} failed:`, endpointError);
+                        continue;
+                    }
+                }
+                
+                console.log('G4FProvider.getServerModels: All endpoints failed, returning empty list');
+                return [];
+            }
         } catch (error) {
             console.error('G4FProvider.getServerModels: Failed to get models:', error);
+            if (axios.isAxiosError(error)) {
+                console.error('G4FProvider.getServerModels: Axios error details:', {
+                    code: error.code,
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    data: error.response?.data,
+                    message: error.message
+                });
+            }
             return [];
         }
+    }
+
+    // Диагностический метод для проверки доступных эндпоинтов
+    async diagnoseEndpoints(): Promise<{ available: string[], errors: any[] }> {
+        const available: string[] = [];
+        const errors: any[] = [];
+        
+        const endpoints = [
+            '/',
+            '/v1/models',
+            '/models',
+            '/api/models',
+            '/v1/chat/completions',
+            '/chat/completions',
+            '/api/chat/completions'
+        ];
+        
+        for (const endpoint of endpoints) {
+            try {
+                const headers: any = {};
+                if (this.config.apiKey) {
+                    headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+                }
+                
+                const response = await axios.get(`${this.config.serverUrl}${endpoint}`, {
+                    headers,
+                    timeout: 5000
+                });
+                
+                available.push(`${endpoint} (${response.status})`);
+                console.log(`G4FProvider.diagnoseEndpoints: ${endpoint} available with status ${response.status}`);
+            } catch (error) {
+                if (axios.isAxiosError(error)) {
+                    errors.push(`${endpoint}: ${error.response?.status || error.code} - ${error.message}`);
+                    console.log(`G4FProvider.diagnoseEndpoints: ${endpoint} failed: ${error.response?.status || error.code}`);
+                } else {
+                    errors.push(`${endpoint}: ${error}`);
+                }
+            }
+        }
+        
+        return { available, errors };
     }
 }

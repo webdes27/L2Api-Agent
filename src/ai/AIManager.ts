@@ -106,6 +106,10 @@ export class AIManager {
         }));
     }
 
+    public getProviderById(providerId: string): AIProvider | null {
+        return this.providers.get(providerId) || null;
+    }
+
     public getCurrentProvider(): string | null {
         this.log('getCurrentProvider called');
         this.log(`this.currentProvider: ${this.currentProvider ? this.currentProvider.getName() : 'null'}`);

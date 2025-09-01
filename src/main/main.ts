@@ -305,6 +305,58 @@ class L2ApiAgent {
             return true;
         });
 
+        ipcMain.handle('ai:test-connection', async () => {
+            try {
+                console.log('Main: ai:test-connection called');
+                this.mainWindow?.webContents.send('main-log', 'Main: ai:test-connection called');
+                
+                const providerId = this.aiManager.getCurrentProvider();
+                if (!providerId) {
+                    console.log('Main: ai:test-connection - no provider configured');
+                    this.mainWindow?.webContents.send('main-log', 'Main: ai:test-connection - no provider configured');
+                    return false;
+                }
+                
+                console.log('Main: ai:test-connection - testing provider ID:', providerId);
+                this.mainWindow?.webContents.send('main-log', `Main: ai:test-connection - testing provider ID: ${providerId}`);
+                
+                // Get the actual provider instance
+                const provider = this.aiManager.getProviderById(providerId);
+                if (!provider) {
+                    console.log('Main: ai:test-connection - provider not found:', providerId);
+                    this.mainWindow?.webContents.send('main-log', `Main: ai:test-connection - provider not found: ${providerId}`);
+                    return false;
+                }
+                
+                console.log('Main: ai:test-connection - testing provider:', provider.getName());
+                this.mainWindow?.webContents.send('main-log', `Main: ai:test-connection - testing provider: ${provider.getName()}`);
+                
+                // Для G4F провайдера сначала делаем диагностику
+                if (providerId === 'g4f') {
+                    try {
+                        // @ts-ignore - diagnoseEndpoints method exists
+                        const diagnosis = await provider.diagnoseEndpoints();
+                        console.log('Main: G4F endpoint diagnosis:', diagnosis);
+                        this.mainWindow?.webContents.send('main-log', `Main: G4F endpoint diagnosis - Available: ${diagnosis.available.join(', ')}`);
+                        this.mainWindow?.webContents.send('main-log', `Main: G4F endpoint diagnosis - Errors: ${diagnosis.errors.join(', ')}`);
+                    } catch (diagnosisError) {
+                        console.log('Main: G4F endpoint diagnosis failed:', diagnosisError);
+                        this.mainWindow?.webContents.send('main-log', `Main: G4F endpoint diagnosis failed: ${diagnosisError}`);
+                    }
+                }
+                
+                const success = await provider.testConnection();
+                console.log('Main: ai:test-connection result:', success);
+                this.mainWindow?.webContents.send('main-log', `Main: ai:test-connection result: ${success}`);
+                
+                return success;
+            } catch (error) {
+                console.error('Main: ai:test-connection error:', error);
+                this.mainWindow?.webContents.send('main-log', `Main: ai:test-connection error: ${error}`);
+                return false;
+            }
+        });
+
         // Project memory handlers
         ipcMain.handle('memory:save-project-state', async (event, projectPath: string, state: any) => {
             return this.memoryManager.saveProjectState(projectPath, state);

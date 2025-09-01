@@ -26,7 +26,8 @@ export class G4FAIProvider implements AIProvider {
             console.log('G4FAIProvider.configure: Config:', config);
 
             const g4fConfig: G4FConfig = {
-                serverUrl: config.baseUrl || config.serverUrl || 'http://localhost:1337',
+                serverUrl: config.serverUrl || config.baseUrl || 'http://localhost:8080',
+                apiKey: config.apiKey,
                 model: config.model || 'gpt-3.5-turbo',
                 maxTokens: config.maxTokens || 2048,
                 temperature: config.temperature || 0.7,
@@ -35,14 +36,10 @@ export class G4FAIProvider implements AIProvider {
                 timeout: config.timeout || 30000
             };
 
+            console.log('G4FAIProvider.configure: Mapped G4F config:', g4fConfig);
+
             this.g4fProvider = new G4FProvider(g4fConfig);
             
-            // Проверяем подключение к серверу
-            const isConnected = await this.g4fProvider.validateConnection();
-            if (!isConnected) {
-                throw new Error('Failed to connect to G4F server');
-            }
-
             this.configured = true;
             console.log('G4FAIProvider.configure: Configuration successful');
 
@@ -87,17 +84,21 @@ export class G4FAIProvider implements AIProvider {
 
     async testConnection(): Promise<boolean> {
         if (!this.configured) {
+            console.error('G4FAIProvider.testConnection: Provider not configured');
             return false;
         }
 
         try {
             console.log('G4FAIProvider.testConnection: Testing connection...');
+            console.log('G4FAIProvider.testConnection: Server URL:', this.g4fProvider.getConfig().serverUrl);
             
             const isConnected = await this.g4fProvider.validateConnection();
             if (!isConnected) {
-                console.error('G4FAIProvider.testConnection: Connection test failed');
+                console.error('G4FAIProvider.testConnection: Connection test failed - server not reachable');
                 return false;
             }
+
+            console.log('G4FAIProvider.testConnection: Server connection successful, testing message...');
 
             // Отправляем тестовое сообщение
             const testMessage: AIMessage = {
@@ -113,6 +114,9 @@ export class G4FAIProvider implements AIProvider {
 
         } catch (error) {
             console.error('G4FAIProvider.testConnection: Test failed:', error);
+            if (error instanceof Error) {
+                console.error('G4FAIProvider.testConnection: Error message:', error.message);
+            }
             return false;
         }
     }
@@ -128,6 +132,20 @@ export class G4FAIProvider implements AIProvider {
         } catch (error) {
             console.error('G4FAIProvider.getServerModels: Failed to get server models:', error);
             return [];
+        }
+    }
+
+    // Диагностика доступных эндпоинтов
+    async diagnoseEndpoints(): Promise<{ available: string[], errors: any[] }> {
+        if (!this.configured) {
+            return { available: [], errors: ['Provider not configured'] };
+        }
+
+        try {
+            return await this.g4fProvider.diagnoseEndpoints();
+        } catch (error) {
+            console.error('G4FAIProvider.diagnoseEndpoints: Failed to diagnose endpoints:', error);
+            return { available: [], errors: [error instanceof Error ? error.message : 'Unknown error'] };
         }
     }
 
