@@ -339,8 +339,48 @@ export const AI_MODELS: AIModel[] = [
         contextWindow: '128k context window',
         version: 'Version: openai/gpt-oss-120b'
     },
+    {
+        id: 'zai-org/GLM-4.5',
+        name: 'GLM 4.5 (DeepInfra)',
+        provider: 'g4f',
+        description: 'DeepInfra with zai-org/GLM-4.5 via GPT4Free',
+        contextWindow: '128k context window',
+        version: 'Version: zai-org/GLM-4.5'
+    },
+    {
+        id: 'openai/gpt-oss-20b',
+        name: 'GPT-OSS 20B (DeepInfra)',
+        provider: 'g4f',
+        description: 'DeepInfra with openai/gpt-oss-20b via GPT4Free',
+        contextWindow: '64k context window',
+        version: 'Version: openai/gpt-oss-20b'
+    },
+    {
+        id: 'GLM-4.5',
+        name: 'GLM 4.5 (GLM)',
+        provider: 'g4f',
+        description: 'GLM with GLM-4.5 via GPT4Free',
+        contextWindow: '128k context window',
+        version: 'Version: GLM-4.5'
+    },
+    {
+        id: 'Z1-32B',
+        name: 'Z1 32B (GLM)',
+        provider: 'g4f',
+        description: 'GLM with Z1-32B via GPT4Free',
+        contextWindow: '32k context window',
+        version: 'Version: Z1-32B'
+    },
     
     // Anthropic Models
+    {
+        id: 'claude-sonnet-4',
+        name: 'Claude Sonnet 4 (Api.Airforce)',
+        provider: 'g4f',
+        description: 'Api.Airforce with claude-sonnet-4 via GPT4Free',
+        contextWindow: '200k context window',
+        version: 'Version: claude-sonnet-4'
+    },
     {
         id: 'claude-3-haiku',
         name: 'Claude 3 Haiku (G4F)',
@@ -430,6 +470,14 @@ export const AI_MODELS: AIModel[] = [
         version: 'Version: deepseek-ai/DeepSeek-V3.1'
     },
     {
+        id: 'deepseek-ai/DeepSeek-Prover-V2-671B',
+        name: 'DeepSeek Prover V2 671B (DeepInfra)',
+        provider: 'g4f',
+        description: 'DeepInfra with deepseek-ai/DeepSeek-Prover-V2-671B via GPT4Free',
+        contextWindow: '128k context window',
+        version: 'Version: deepseek-ai/DeepSeek-Prover-V2-671B'
+    },
+    {
         id: 'deepseek-ai/DeepSeek-R1',
         name: 'DeepSeek R1 (HuggingFace)',
         provider: 'g4f',
@@ -452,6 +500,14 @@ export const AI_MODELS: AIModel[] = [
         description: 'DeepSeek R1 Distill Qwen 32B via Cloudflare AI',
         contextWindow: '32k context window',
         version: 'Version: deepseek-ai/deepseek-r1-distill-qwen-32b'
+    },
+    {
+        id: 'deepseek-distill-qwen-32b',
+        name: 'DeepSeek Distill Qwen 32B (Cloudflare AI)',
+        provider: 'g4f',
+        description: 'Cloudflare AI with deepseek-distill-qwen-32b via GPT4Free',
+        contextWindow: '32k context window',
+        version: 'Version: deepseek-distill-qwen-32b'
     },
     
     // Qwen Models
@@ -480,6 +536,22 @@ export const AI_MODELS: AIModel[] = [
         version: 'Version: Qwen/Qwen2.5-Coder-32B-Instruct'
     },
     {
+        id: 'qwen2.5-coder-32b-instruct',
+        name: 'Qwen2.5 Coder 32B (Pollinations AI)',
+        provider: 'g4f',
+        description: 'Pollinations AI 🌸 with qwen2.5-coder-32b-instruct via GPT4Free',
+        contextWindow: '32k context window',
+        version: 'Version: qwen2.5-coder-32b-instruct'
+    },
+    {
+        id: 'qwen3-coder-plus',
+        name: 'Qwen3 Coder Plus (Qwen)',
+        provider: 'g4f',
+        description: 'Qwen with qwen3-coder-plus via GPT4Free',
+        contextWindow: '64k context window',
+        version: 'Version: qwen3-coder-plus'
+    },
+    {
         id: 'Qwen/Qwen3-235B-A22B-fp8-tput',
         name: 'Qwen3 235B (HuggingFace Together)',
         provider: 'g4f',
@@ -487,26 +559,34 @@ export const AI_MODELS: AIModel[] = [
         contextWindow: '64k context window',
         version: 'Version: Qwen/Qwen3-235B-A22B-fp8-tput'
     },
+    {
+        id: 'Qwen/Qwen3-235B-A22B-Instruct-2507',
+        name: 'Qwen3 235B Instruct (DeepInfra)',
+        provider: 'g4f',
+        description: 'DeepInfra with Qwen/Qwen3-235B-A22B-Instruct-2507 via GPT4Free',
+        contextWindow: '64k context window',
+        version: 'Version: Qwen/Qwen3-235B-A22B-Instruct-2507'
+    },
+    {
+        id: 'Qwen/Qwen3-235B-A22B-Thinking-2507',
+        name: 'Qwen3 235B Thinking (DeepInfra)',
+        provider: 'g4f',
+        description: 'DeepInfra with Qwen/Qwen3-235B-A22B-Thinking-2507 via GPT4Free',
+        contextWindow: '64k context window',
+        version: 'Version: Qwen/Qwen3-235B-A22B-Thinking-2507'
+    },
     
     // NousResearch Models
     {
         id: 'NousResearch/Hermes-4-405B',
-        name: 'Hermes 4 405B (HuggingFace)',
+        name: 'Hermes 4 405B (HuggingFace Nebius)',
         provider: 'g4f',
-        description: 'NousResearch Hermes 4 405B via HuggingFace',
+        description: 'HuggingFace (nebius) with NousResearch/Hermes-4-405B via GPT4Free',
         contextWindow: '64k context window',
         version: 'Version: NousResearch/Hermes-4-405B'
     },
     
     // Code Models
-    {
-        id: 'codellama-7b',
-        name: 'Code Llama 7B (G4F)',
-        provider: 'g4f',
-        description: 'Code-optimized Llama model via GPT4Free',
-        contextWindow: '16k context window',
-        version: 'Version: codellama-7b'
-    },
     {
         id: 'deepseek-coder',
         name: 'DeepSeek Coder (G4F)',
