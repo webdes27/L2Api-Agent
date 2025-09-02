@@ -123,11 +123,11 @@ export class AnthropicProvider implements AIProvider {
         let content = message.content;
 
         // Add context information if available
-        if (message.context.filePath) {
+        if (message.context?.filePath) {
             content = `File: ${message.context.filePath}\n\n${content}`;
         }
 
-        if (message.context.selectedCode) {
+        if (message.context?.selectedCode) {
             content = `${content}\n\nSelected Code:\n\`\`\`\n${message.context.selectedCode}\n\`\`\``;
         }
 

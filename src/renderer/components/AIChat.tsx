@@ -123,10 +123,10 @@ const AIChat: React.FC<AIChatProps> = ({
 
         // Add user message
         addMessage('user', userMessage, {
-            filePath: currentFile,
+                filePath: currentFile,
             selectedCode,
-            taskType: 'chat'
-        });
+                taskType: 'chat'
+            });
 
         try {
             // Send to AI

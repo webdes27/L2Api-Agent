@@ -120,8 +120,7 @@ export class G4FAIProvider implements AIProvider {
             // Отправляем тестовое сообщение
             const testMessage: AIMessage = {
                 role: 'user',
-                content: 'Hello, this is a test message.',
-                context: {}
+                content: 'Hello, this is a test message.'
             };
 
             const response = await this.sendMessage([testMessage]);

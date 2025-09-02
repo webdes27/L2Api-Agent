@@ -1,7 +1,7 @@
 export interface AIMessage {
     role: 'user' | 'assistant' | 'system';
     content: string;
-    context: {
+    context?: {
         filePath?: string;
         selectedCode?: string;
         projectPath?: string;
